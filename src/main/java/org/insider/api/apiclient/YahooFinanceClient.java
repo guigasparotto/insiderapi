@@ -1,4 +1,4 @@
-package org.insider.util.apiclient;
+package org.insider.api.apiclient;
 
 import org.insider.util.ApplicationProperties;
 

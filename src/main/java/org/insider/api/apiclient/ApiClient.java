@@ -1,4 +1,4 @@
-package org.insider.util.apiclient;
+package org.insider.api.apiclient;
 
 import java.net.http.HttpResponse;
 

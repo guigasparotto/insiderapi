@@ -2,11 +2,11 @@ package org.insider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
-import org.insider.controllers.InsiderTradeHandler;
+import org.insider.api.controllers.InsiderTradeHandler;
 import org.insider.service.InsiderTradeService;
-import org.insider.util.apiclient.ApiClient;
+import org.insider.api.apiclient.ApiClient;
 import org.insider.util.ApplicationProperties;
-import org.insider.util.apiclient.YahooFinanceClient;
+import org.insider.api.apiclient.YahooFinanceClient;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

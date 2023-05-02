@@ -1,4 +1,4 @@
-package org.insider.util.serialization;
+package org.insider.api.serialization;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

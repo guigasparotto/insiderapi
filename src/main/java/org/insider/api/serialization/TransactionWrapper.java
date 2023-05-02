@@ -1,4 +1,4 @@
-package org.insider.util.serialization;
+package org.insider.api.serialization;
 
 import org.insider.model.Transaction;
 

@@ -1,4 +1,4 @@
-package org.insider.controllers;
+package org.insider.api.controllers;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
