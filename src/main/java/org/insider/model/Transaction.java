@@ -50,7 +50,7 @@ public class Transaction {
     public String getOwnership() { return ownership; }
     public void setOwnership(String value) { this.ownership = value; }
 
-    public LocalDateWrapper getStartDate() { return startDate; }
+    public String getStartDate() { return startDate.getLocalDate(); }
     public void setStartDate(LocalDateWrapper value) { this.startDate = value; }
 
     public String getValue() { return value; }
