@@ -1,6 +1,8 @@
 package org.insider.api.apiclient;
 
-import org.insider.util.ApplicationProperties;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.insider.util.ConfigReader;
 
 import java.io.IOException;
 import java.net.URI;
@@ -9,12 +11,11 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class YahooFinanceClient implements ApiClient {
+    private static final Logger logger = LogManager.getLogger(ApiClient.class);
     private static final String YAHOO_URL = "https://yh-finance.p.rapidapi.com/stock/v2";
     public static final String INSIDERS_ENDPOINT = "/get-insider-transactions";
-    private final ApplicationProperties properties;
 
-    public YahooFinanceClient(ApplicationProperties properties) {
-        this.properties = properties;
+    public YahooFinanceClient() {
     }
 
     @Override
@@ -25,6 +26,7 @@ public class YahooFinanceClient implements ApiClient {
         try {
             response = HttpClient.newHttpClient().
                     send(request, HttpResponse.BodyHandlers.ofString());
+            logger.info("GET request successfully sent to " + request.uri());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -36,7 +38,7 @@ public class YahooFinanceClient implements ApiClient {
         return HttpRequest.newBuilder()
                 .uri(URI.create(uri))
                 .header("content-type", "application/json")
-                .header("X-RapidAPI-Key", properties.getProperty("api-key"))
+                .header("X-RapidAPI-Key", ConfigReader.getProperty("api-key"))
                 .header("X-RapidAPI-Host", "yh-finance.p.rapidapi.com")
                 .method("GET", HttpRequest.BodyPublishers.noBody())
                 .build();

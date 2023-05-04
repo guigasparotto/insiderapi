@@ -1,6 +1,5 @@
 package org.insider.api.serialization;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,7 +8,6 @@ import org.insider.model.Transaction;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Optional;
 
 public class TransactionDeserializer extends StdDeserializer<Transaction> {
     public TransactionDeserializer() {
@@ -33,14 +31,18 @@ public class TransactionDeserializer extends StdDeserializer<Transaction> {
         String filerRelation = valueOrDefault(node, "filerRelation");
         String shares = valueOrDefault(node.get("shares"), "raw");
         String filerUrl = valueOrDefault(node, "filerUrl");
-        long maxAge = Long.parseLong(valueOrDefault(node, "maxAge"));
+        Integer maxAge = Integer.valueOf(valueOrDefault(node, "maxAge"));
 
         return new Transaction(filerName, transactionText, moneyText, ownership,
                 startDate, value, filerRelation, shares, filerUrl, maxAge);
     }
 
     private String valueOrDefault(JsonNode node, String field) {
-        if (node == null) return "";
+        if (node == null) {
+            if (field.equals("raw")) return "0";
+
+            return "";
+        }
 
         JsonNode fieldNode = node.get(field);
         return fieldNode != null ? fieldNode.asText() : "";

@@ -55,7 +55,7 @@ public class InsiderTradeServiceTest {
                 "",
                 "1000",
                 "www.ggd.com",
-                1L
+                1
         );
 
         // TODO: Does is make sense to use a real instance of ObjectMapper?

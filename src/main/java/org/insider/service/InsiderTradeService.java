@@ -9,20 +9,28 @@ import org.insider.api.apiclient.ApiClient;
 import org.insider.api.apiclient.YahooFinanceClient;
 import org.insider.api.serialization.TransactionWrapper;
 import org.insider.api.serialization.TransactionWrapperDeserializer;
+import org.insider.repository.DatabaseWrapper;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.xml.crypto.Data;
 
 public class InsiderTradeService {
+    private static final Logger logger = LogManager.getLogger(InsiderTradeService.class);
     private final ObjectMapper objectMapper;
     private final ApiClient apiClient;
+    private final DatabaseWrapper databaseWrapper;
 
 
-    public InsiderTradeService(ObjectMapper objectMapper, ApiClient apiClient) {
+    public InsiderTradeService(ObjectMapper objectMapper, ApiClient apiClient, DatabaseWrapper databaseWrapper) {
         this.objectMapper = objectMapper;
         this.objectMapper.registerModule(new JavaTimeModule());
         this.apiClient = apiClient;
+        this.databaseWrapper = databaseWrapper;
     }
 
     public String getInsiderTradingForSymbol(String symbol, String region) {
@@ -55,6 +63,8 @@ public class InsiderTradeService {
             transactions = transactionWrapper.getTransactions();
 
             // TODO: Save the transactions to the database
+
+            databaseWrapper.saveToDatabase(transactions);
 
             return objectMapper.writeValueAsString(transactions);
         } catch (IOException e) {

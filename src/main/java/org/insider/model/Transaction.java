@@ -13,7 +13,7 @@ public class Transaction {
     private String filerRelation;
     private String shares;
     private String filerUrl;
-    private Long maxAge;
+    private Integer maxAge;
 
     public Transaction(String filerName,
                        String transactionText,
@@ -24,7 +24,7 @@ public class Transaction {
                        String filerRelation,
                        String shares,
                        String filerUrl,
-                       Long maxAge)
+                       Integer maxAge)
     {
         this.filerName = filerName;
         this.transactionText = transactionText;
@@ -65,8 +65,24 @@ public class Transaction {
     public String getFilerUrl() { return filerUrl; }
     public void setFilerUrl(String value) { this.filerUrl = value; }
 
-    public Long getMaxAge() { return maxAge; }
-    public void setMaxAge(Long value) { this.maxAge = value; }
+    public Integer getMaxAge() { return maxAge; }
+    public void setMaxAge(Integer value) { this.maxAge = value; }
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "filerName='" + filerName + '\'' +
+                ", transactionText='" + transactionText + '\'' +
+                ", moneyText='" + moneyText + '\'' +
+                ", ownership='" + ownership + '\'' +
+                ", startDate=" + startDate +
+                ", value='" + value + '\'' +
+                ", filerRelation='" + filerRelation + '\'' +
+                ", shares='" + shares + '\'' +
+                ", filerUrl='" + filerUrl + '\'' +
+                ", maxAge=" + maxAge +
+                '}';
+    }
 
     public static class LocalDateWrapper {
         private final LocalDate localDate;
@@ -82,6 +98,11 @@ public class Transaction {
 
         public LocalDate asLocalDate() {
             return this.localDate;
+        }
+
+        @Override
+        public String toString() {
+            return localDate.format(dateTimeFormatter);
         }
     }
 }
