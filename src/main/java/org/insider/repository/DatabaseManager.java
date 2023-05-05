@@ -11,7 +11,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class DatabaseManager {
     private static final Logger logger = LogManager.getLogger(DatabaseManager.class);
@@ -28,10 +27,10 @@ public class DatabaseManager {
         });
     }
 
-    public List<Transaction> getByDateRange(String symbol, String region, String startDate, String endDate) {
+    public List<Transaction> getTransactionsByRange(String symbol, String region, String startDate, String endDate) {
 
         try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
-            TypedQuery<TransactionsEntity> jpqlQuery = entityManager.createQuery(
+            TypedQuery<TransactionsEntity> query = entityManager.createQuery(
                     "SELECT t " +
                     "FROM TransactionsEntity t " +
                     "WHERE t.symbol =: symbol " +
@@ -39,12 +38,12 @@ public class DatabaseManager {
                     "AND t.startDate >=: startDate " +
                     "AND t.startDate <=: endDate",
                     TransactionsEntity.class);
-            jpqlQuery.setParameter("symbol", symbol);
-            jpqlQuery.setParameter("region", region);
-            jpqlQuery.setParameter("startDate", Date.valueOf(startDate));
-            jpqlQuery.setParameter("endDate", Date.valueOf(endDate));
+            query.setParameter("symbol", symbol);
+            query.setParameter("region", region);
+            query.setParameter("startDate", Date.valueOf(startDate));
+            query.setParameter("endDate", Date.valueOf(endDate));
 
-            return transactionsEntityToTransaction(jpqlQuery.getResultList());
+            return convertTransactionsEntityToTransaction(query.getResultList());
 
         } catch (IllegalStateException e) {
             logger.error(e.getMessage());
@@ -53,7 +52,7 @@ public class DatabaseManager {
         return null;
     }
 
-    public void saveToDatabase(List<Transaction> transactions, String symbol, String region) {
+    public boolean saveToDatabase(List<Transaction> transactions, String symbol, String region) {
         // Creates the session
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         EntityTransaction entityTransaction = entityManager.getTransaction();
@@ -62,23 +61,25 @@ public class DatabaseManager {
         try (entityManager) {
             entityTransaction.begin();
 
+            updateSymbolRecord(symbol, region);
+
             for (int i = 0; i < transactions.size(); i++) {
                 Transaction t = transactions.get(i);
-                TransactionsEntity entity = new TransactionsEntity();
-                entity.setSymbol(symbol);
-                entity.setRegion(region);
-                entity.setFilerName(t.getFilerName());
-                entity.setFilerRelation(t.getFilerRelation());
-                entity.setFilerUrl(t.getFilerUrl());
-                entity.setOwnership(t.getOwnership());
-                entity.setTransactionText(t.getTransactionText());
-                entity.setStartDate(Date.valueOf(t.getStartDate()));
-                entity.setShares(Integer.valueOf(t.getShares()));
-                entity.setValue(Double.valueOf(t.getValue()));
-                entity.setMoneyText(t.getMoneyText());
-                entity.setMaxAge(Math.toIntExact(t.getMaxAge()));
-                entityManager.persist(entity);
-                logger.info("Persisted transaction entity: " + entity);
+                TransactionsEntity tradeRecord = new TransactionsEntity();
+                tradeRecord.setSymbol(symbol);
+                tradeRecord.setRegion(region);
+                tradeRecord.setFilerName(t.getFilerName());
+                tradeRecord.setFilerRelation(t.getFilerRelation());
+                tradeRecord.setFilerUrl(t.getFilerUrl());
+                tradeRecord.setOwnership(t.getOwnership());
+                tradeRecord.setTransactionText(t.getTransactionText());
+                tradeRecord.setStartDate(Date.valueOf(t.getStartDate()));
+                tradeRecord.setShares(Integer.valueOf(t.getShares()));
+                tradeRecord.setValue(Double.valueOf(t.getValue()));
+                tradeRecord.setMoneyText(t.getMoneyText());
+                tradeRecord.setMaxAge(Math.toIntExact(t.getMaxAge()));
+                entityManager.persist(tradeRecord);
+                logger.info("Persisted transaction entity: " + tradeRecord);
 
                 if (i % batchSize == 0) {
                     entityManager.flush();
@@ -88,6 +89,44 @@ public class DatabaseManager {
 
             entityTransaction.commit();
             logger.info("Committed transaction entity list to the database");
+
+            return true;
+        } catch (IllegalStateException e) {
+            logger.error(e.getMessage());
+
+            if (entityTransaction.isActive()) {
+                entityTransaction.rollback();
+            }
+
+            return false;
+        }
+    }
+
+    public void closeEntityManagerFactory() {
+        entityManagerFactory.close();
+    }
+
+    private void updateSymbolRecord(String symbol, String region) {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityTransaction entityTransaction = entityManager.getTransaction();
+
+        try (entityManager) {
+            entityTransaction.begin();
+
+            SymbolsEntity symbolRecord = getSymbolRecord(symbol, region);
+
+            if (symbolRecord == null) {
+                symbolRecord = new SymbolsEntity();
+                symbolRecord.setSymbol(symbol);
+                symbolRecord.setRegion(region);
+                symbolRecord.setUpdated(Date.valueOf(LocalDate.now()));
+            } else {
+                symbolRecord.setUpdated(Date.valueOf(LocalDate.now()));
+            }
+
+            entityManager.persist(symbolRecord);
+            entityTransaction.commit();
+            logger.info("Committed symbol updated date to database");
         } catch (IllegalStateException e) {
             logger.error(e.getMessage());
 
@@ -97,11 +136,32 @@ public class DatabaseManager {
         }
     }
 
-    public void closeEntityManagerFactory() {
-        entityManagerFactory.close();
+    public SymbolsEntity getSymbolRecord(String symbol, String region) {
+        SymbolsEntity symbolRecord = null;
+
+        try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
+            TypedQuery<SymbolsEntity> query = entityManager.createQuery(
+                    "SELECT s " +
+                    "FROM SymbolsEntity s " +
+                    "WHERE s.symbol =: symbol " +
+                    "AND s.region =: region",
+                    SymbolsEntity.class);
+            query.setParameter("symbol", symbol);
+            query.setParameter("region", region);
+
+            try {
+                symbolRecord = query.getSingleResult();
+            } catch (NoResultException e) {
+                logger.warn(e.getMessage());
+            } catch (IllegalStateException e) {
+                logger.error(e.getMessage());
+            }
+        }
+
+        return symbolRecord;
     }
 
-    private List<Transaction> transactionsEntityToTransaction(List<TransactionsEntity> transactionEntities) {
+    private List<Transaction> convertTransactionsEntityToTransaction(List<TransactionsEntity> transactionEntities) {
         List<Transaction> transactions = new ArrayList<>();
 
         for (var entity : transactionEntities) {

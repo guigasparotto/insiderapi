@@ -5,18 +5,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.insider.model.Transaction;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.insider.api.apiclient.ApiClient;
 import org.insider.api.apiclient.YahooFinanceClient;
 import org.insider.api.serialization.TransactionWrapper;
 import org.insider.api.serialization.TransactionWrapperDeserializer;
+import org.insider.model.Transaction;
 import org.insider.repository.DatabaseManager;
+import org.insider.repository.SymbolsEntity;
 
-import java.io.IOException;
 import java.net.http.HttpResponse;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.Optional;
 
 public class InsiderTradeService {
     private static final Logger logger = LogManager.getLogger(InsiderTradeService.class);
@@ -35,46 +38,51 @@ public class InsiderTradeService {
     public String getInsiderTradingForSymbol(
             String symbol, String region, String startDate, String endDate)
     {
-        List<Transaction> transactions =
-                databaseManager.getByDateRange(symbol, region, startDate, endDate);
+        List<Transaction> queryResult = null;
+        Date updated = Optional.ofNullable(databaseManager.getSymbolRecord(symbol, region))
+                .map(SymbolsEntity::getUpdated)
+                .orElse(null);
 
-        if (!transactions.isEmpty()) {
-            try {
-                return objectMapper.writeValueAsString(transactions);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+        if (updated != null && updated.compareTo(Date.valueOf(LocalDate.now())) == 0) {
+            queryResult = databaseManager.getTransactionsByRange(symbol, region, startDate, endDate);
         }
-
-        String uri = YahooFinanceClient.INSIDERS_ENDPOINT
-                + "?symbol=" + symbol
-                + "&region=" + region;
-
-        HttpResponse<String> response;
 
         try {
-            response = apiClient.sendGetRequest(uri);
-            JsonNode rootNode = objectMapper.readTree(response.body());
-            JsonNode insiderTransactions =
-                    rootNode.path("insiderTransactions").path("transactions");
+            if (queryResult == null) {
+                String uri = YahooFinanceClient.INSIDERS_ENDPOINT
+                             + "?symbol=" + symbol
+                             + "&region=" + region;
 
-            SimpleModule module = new SimpleModule();
-            module.addDeserializer(TransactionWrapper.class, new TransactionWrapperDeserializer());
-            objectMapper.registerModule(module);
+                HttpResponse<String> httpResponse;
 
-            TransactionWrapper transactionWrapper = objectMapper.readValue(
-                    insiderTransactions.toString(),
-                    TransactionWrapper.class);
+                httpResponse = apiClient.sendGetRequest(uri);
+                JsonNode rootNode = objectMapper.readTree(httpResponse.body());
+                JsonNode insiderTransactions =
+                        rootNode.path("insiderTransactions").path("transactions");
 
-            transactions = transactionWrapper.getTransactions();
+                SimpleModule module = new SimpleModule();
+                module.addDeserializer(TransactionWrapper.class, new TransactionWrapperDeserializer());
+                objectMapper.registerModule(module);
 
-            // TODO: Save the transactions to the database
+                TransactionWrapper transactionWrapper = objectMapper.readValue(
+                        insiderTransactions.toString(),
+                        TransactionWrapper.class);
 
-            databaseManager.saveToDatabase(transactions, symbol, region);
+                List<Transaction> transactions = transactionWrapper.getTransactions();
+                boolean success = databaseManager.saveToDatabase(transactions, symbol, region);
 
-            return objectMapper.writeValueAsString(transactions);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+                if (!success) {
+                    logger.error("Failed to save transaction list to the database");
+                }
+
+                queryResult = databaseManager.getTransactionsByRange(symbol, region, startDate, endDate);
+            }
+
+            return objectMapper.writeValueAsString(queryResult);
+        } catch (JsonProcessingException e) {
+            logger.error(e.getMessage());
         }
+
+        return null;
     }
 }

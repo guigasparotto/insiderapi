@@ -10,7 +10,6 @@ import java.util.Objects;
 public class TransactionsEntity {
 
     @Id
-    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
@@ -158,11 +157,22 @@ public class TransactionsEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TransactionsEntity that = (TransactionsEntity) o;
-        return id == that.id && Objects.equals(filerName, that.filerName) && Objects.equals(transactionText, that.transactionText) && Objects.equals(moneyText, that.moneyText) && Objects.equals(ownership, that.ownership) && Objects.equals(startDate, that.startDate) && Objects.equals(value, that.value) && Objects.equals(filerRelation, that.filerRelation) && Objects.equals(shares, that.shares) && Objects.equals(filerUrl, that.filerUrl) && Objects.equals(maxAge, that.maxAge);
+        return id == that.id
+               && Objects.equals(filerName, that.filerName)
+               && Objects.equals(transactionText, that.transactionText)
+               && Objects.equals(moneyText, that.moneyText)
+               && Objects.equals(ownership, that.ownership)
+               && Objects.equals(startDate, that.startDate)
+               && Objects.equals(value, that.value)
+               && Objects.equals(filerRelation, that.filerRelation)
+               && Objects.equals(shares, that.shares)
+               && Objects.equals(filerUrl, that.filerUrl)
+               && Objects.equals(maxAge, that.maxAge);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, filerName, transactionText, moneyText, ownership, startDate, value, filerRelation, shares, filerUrl, maxAge);
+        return Objects.hash(id, filerName, transactionText, moneyText, ownership,
+                startDate, value, filerRelation, shares, filerUrl, maxAge);
     }
 }

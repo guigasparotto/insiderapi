@@ -51,6 +51,9 @@ public class InsiderTradeHandler implements HttpHandler {
                             startDateParam.value(),
                             endDateParam.value());
 
+            // TODO: Find a better way to handle empty responses
+            jsonResponse = jsonResponse != null ? jsonResponse : "No records found";
+
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(200, jsonResponse.getBytes().length);
 
