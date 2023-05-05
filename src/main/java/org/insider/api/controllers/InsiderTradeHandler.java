@@ -6,6 +6,7 @@ import org.insider.service.InsiderTradeService;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 public class InsiderTradeHandler implements HttpHandler {
     private final InsiderTradeService insiderTradeService;
@@ -17,7 +18,6 @@ public class InsiderTradeHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) {
         try (exchange) {
-
             if (!exchange.getRequestMethod().equalsIgnoreCase("GET")) {
                 String errorMessage = "Invalid request method: Only GET is allowed";
                 exchange.getResponseHeaders().set("Content-Type", "text/plain");
@@ -28,18 +28,28 @@ public class InsiderTradeHandler implements HttpHandler {
             }
 
             String query = exchange.getRequestURI().getQuery();
-            String[] symbolRegion = query.split("&");
+            String[] queryParameters = query.split("&");
 
-            QueryParameter symbolParam = parseQueryParameter(symbolRegion[0]);
-            QueryParameter regionParam = parseQueryParameter(symbolRegion[1]);
+            QueryParameter symbolParam = parseQueryParameter(queryParameters[0]);
+            QueryParameter regionParam = parseQueryParameter(queryParameters[1]);
+            QueryParameter startDateParam = parseQueryParameter(queryParameters[2]);
+            QueryParameter endDateParam = parseQueryParameter(queryParameters[3]);
 
-            if (!symbolParam.key().equals("symbol") || !regionParam.key().equals("region")) {
+            if (!symbolParam.key().equals("symbol")
+                || !regionParam.key().equals("region")
+                || !startDateParam.key().equals("startDate")
+                || !endDateParam.key().equals("endDate"))
+            {
                 exchange.sendResponseHeaders(400, 0);
                 return;
             }
 
-            String jsonResponse = insiderTradeService.getInsiderTradingForSymbol(
-                    symbolParam.value(), regionParam.value());
+            String jsonResponse =
+                    insiderTradeService.getInsiderTradingForSymbol(
+                            symbolParam.value(),
+                            regionParam.value(),
+                            startDateParam.value(),
+                            endDateParam.value());
 
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(200, jsonResponse.getBytes().length);

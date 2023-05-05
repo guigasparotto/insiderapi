@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.insider.api.apiclient.ApiClient;
 import org.insider.api.serialization.TransactionWrapper;
 import org.insider.model.Transaction;
+import org.insider.repository.DatabaseManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,11 +37,13 @@ public class InsiderTradeServiceTest {
     private JsonNode mockTransactionsNode;
     @Mock
     private JsonNode mockNode;
+    @Mock
+    private DatabaseManager databaseManager;
 
     @BeforeEach
     public void setUp() {
         ObjectMapper objectMapper = new ObjectMapper();
-        insiderTradeService = new InsiderTradeService(objectMapper, mockApiClient);
+        insiderTradeService = new InsiderTradeService(objectMapper, mockApiClient, databaseManager);
     }
 
     @Test
@@ -71,7 +74,8 @@ public class InsiderTradeServiceTest {
 //        when(mockObjectMapper.readValue(anyString(), eq(TransactionWrapper.class))).thenReturn(transactionWrapper);
 //        when(mockObjectMapper.writeValueAsString(transactionWrapper))
 
-        String response = insiderTradeService.getInsiderTradingForSymbol("ZOO.L", "GB");
+        String response = insiderTradeService.getInsiderTradingForSymbol(
+                "ZOO.L", "GB", "2019-01-01", "2019-01-01");
 
         assertEquals(getJsonExpectedResult(), response);
     }

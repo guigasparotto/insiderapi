@@ -3,12 +3,11 @@ package org.insider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import org.insider.api.controllers.InsiderTradeHandler;
-import org.insider.repository.DatabaseWrapper;
+import org.insider.repository.DatabaseManager;
 import org.insider.service.InsiderTradeService;
 import org.insider.api.apiclient.ApiClient;
 import org.insider.api.apiclient.YahooFinanceClient;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executor;
@@ -19,9 +18,9 @@ public class Application {
     public static void main(String[] args) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         ApiClient apiClient = new YahooFinanceClient();
-        DatabaseWrapper databaseWrapper = new DatabaseWrapper();
+        DatabaseManager databaseManager = new DatabaseManager();
 
-        InsiderTradeService insiderTradeService = new InsiderTradeService(objectMapper, apiClient, databaseWrapper);
+        InsiderTradeService insiderTradeService = new InsiderTradeService(objectMapper, apiClient, databaseManager);
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
         server.createContext("/insiders", new InsiderTradeHandler(insiderTradeService));
 
@@ -30,6 +29,6 @@ public class Application {
         server.start();
 
         // Add a shutdown hook to close the EntityManagerFactory
-        Runtime.getRuntime().addShutdownHook(new Thread(databaseWrapper::closeEntityManagerFactory));
+        Runtime.getRuntime().addShutdownHook(new Thread(databaseManager::closeEntityManagerFactory));
     }
 }

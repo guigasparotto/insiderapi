@@ -14,6 +14,9 @@ public class TransactionsEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    private String symbol;
+    private String region;
+
     @Column(name = "filerName", nullable = false)
     private String filerName;
 
@@ -35,6 +38,22 @@ public class TransactionsEntity {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
     }
 
     public String getFilerName() {
