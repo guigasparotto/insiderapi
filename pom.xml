@@ -118,6 +118,13 @@
             <version>2.20.0</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>9.17.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>

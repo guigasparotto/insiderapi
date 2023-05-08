@@ -4,16 +4,16 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public class Transaction {
-    private String filerName;
-    private String transactionText;
-    private String moneyText;
-    private String ownership;
-    private LocalDateWrapper startDate;
-    private String value;
-    private String filerRelation;
-    private String shares;
-    private String filerUrl;
-    private Integer maxAge;
+    private final String filerName;
+    private final String transactionText;
+    private final String moneyText;
+    private final String ownership;
+    private final LocalDateWrapper startDate;
+    private final String value;
+    private final String filerRelation;
+    private final String shares;
+    private final String filerUrl;
+    private final Integer maxAge;
 
     public Transaction(String filerName,
                        String transactionText,
@@ -39,34 +39,24 @@ public class Transaction {
     }
 
     public String getFilerName() { return filerName; }
-    public void setFilerName(String value) { this.filerName = value; }
 
     public String getTransactionText() { return transactionText; }
-    public void setTransactionText(String value) { this.transactionText = value; }
 
     public String getMoneyText() { return moneyText; }
-    public void setMoneyText(String value) { this.moneyText = value; }
 
     public String getOwnership() { return ownership; }
-    public void setOwnership(String value) { this.ownership = value; }
 
     public String getStartDate() { return startDate.getLocalDate(); }
-    public void setStartDate(LocalDateWrapper value) { this.startDate = value; }
 
     public String getValue() { return value; }
-    public void setValue(String value) { this.value = value; }
 
     public String getFilerRelation() { return filerRelation; }
-    public void setFilerRelation(String value) { this.filerRelation = value; }
 
     public String getShares() { return shares; }
-    public void setShares(String value) { this.shares = value; }
 
     public String getFilerUrl() { return filerUrl; }
-    public void setFilerUrl(String value) { this.filerUrl = value; }
 
     public Integer getMaxAge() { return maxAge; }
-    public void setMaxAge(Integer value) { this.maxAge = value; }
 
     @Override
     public String toString() {

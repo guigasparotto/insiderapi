@@ -21,6 +21,7 @@ public class DatabaseManager {
         entityManagerFactory = Persistence.createEntityManagerFactory("default",
             new HashMap<String, String>() {
                 {
+                    put("hibernate.connection.url", ConfigReader.getProperty("database.url"));
                     put("hibernate.connection.username", ConfigReader.getProperty("database.username"));
                     put("hibernate.connection.password", ConfigReader.getProperty("database.password"));
                 }
