@@ -21,24 +21,22 @@ public class SymbolsEntity {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    // Hibernate requires a default constructor with at least protected visibility
+    protected  SymbolsEntity() {
+    }
+
+    public SymbolsEntity(String symbol, String region, Date updated) {
+        this.symbol = Objects.requireNonNull(symbol);
+        this.region = Objects.requireNonNull(region);
+        this.updated = Objects.requireNonNull(updated);
     }
 
     public String getSymbol() {
         return symbol;
     }
 
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
-    }
-
     public String getRegion() {
         return region;
-    }
-
-    public void setRegion(String region) {
-        this.region = region;
     }
 
     public Date getUpdated() {
@@ -46,7 +44,7 @@ public class SymbolsEntity {
     }
 
     public void setUpdated(Date updated) {
-        this.updated = updated;
+        this.updated = Objects.requireNonNull(updated);
     }
 
     @Override

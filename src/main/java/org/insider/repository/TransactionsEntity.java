@@ -31,108 +31,88 @@ public class TransactionsEntity {
     private String filerUrl;
     private Integer maxAge;
 
-    public int getId() {
-        return id;
+    // Hibernate requires a default constructor with at least protected visibility
+    protected TransactionsEntity() {
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public TransactionsEntity(
+            String symbol,
+            String region,
+            String filerName,
+            String transactionText,
+            String moneyText,
+            String ownership,
+            Date startDate,
+            Double value,
+            String filerRelation,
+            Integer shares,
+            String filerUrl,
+            Integer maxAge)
+    {
+        this.symbol = Objects.requireNonNull(symbol);
+        this.region = Objects.requireNonNull(region);
+        this.filerName = Objects.requireNonNull(filerName);
+        this.transactionText = transactionText;
+        this.moneyText = moneyText;
+        this.ownership = ownership;
+        this.startDate = Objects.requireNonNull(startDate);
+        this.value = value;
+        this.filerRelation = filerRelation;
+        this.shares = Objects.requireNonNull(shares);
+        this.filerUrl = filerUrl;
+        this.maxAge = maxAge;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getSymbol() {
         return symbol;
     }
 
-    public void setRegion(String region) {
-        this.region = region;
-    }
-
     public String getRegion() {
         return region;
-    }
-
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
     }
 
     public String getFilerName() {
         return filerName;
     }
 
-    public void setFilerName(String filerName) {
-        this.filerName = filerName;
-    }
-
     public String getTransactionText() {
         return transactionText;
-    }
-
-    public void setTransactionText(String transactionText) {
-        this.transactionText = transactionText;
     }
 
     public String getMoneyText() {
         return moneyText;
     }
 
-    public void setMoneyText(String moneyText) {
-        this.moneyText = moneyText;
-    }
-
     public String getOwnership() {
         return ownership;
-    }
-
-    public void setOwnership(String ownership) {
-        this.ownership = ownership;
     }
 
     public Date getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Date startDate) {
-        this.startDate = startDate;
-    }
-
     public Double getValue() {
         return value;
-    }
-
-    public void setValue(Double value) {
-        this.value = value;
     }
 
     public String getFilerRelation() {
         return filerRelation;
     }
 
-    public void setFilerRelation(String filerRelation) {
-        this.filerRelation = filerRelation;
-    }
-
     public Integer getShares() {
         return shares;
-    }
-
-    public void setShares(Integer shares) {
-        this.shares = shares;
     }
 
     public String getFilerUrl() {
         return filerUrl;
     }
 
-    public void setFilerUrl(String filerUrl) {
-        this.filerUrl = filerUrl;
-    }
-
     public Integer getMaxAge() {
         return maxAge;
-    }
-
-    public void setMaxAge(Integer maxAge) {
-        this.maxAge = maxAge;
     }
 
     @Override

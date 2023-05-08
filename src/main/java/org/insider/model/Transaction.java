@@ -1,7 +1,10 @@
 package org.insider.model;
 
+import org.insider.repository.TransactionsEntity;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 public class Transaction {
     private final String filerName;
@@ -72,6 +75,29 @@ public class Transaction {
                 ", filerUrl='" + filerUrl + '\'' +
                 ", maxAge=" + maxAge +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Transaction that = (Transaction) o;
+        return Objects.equals(filerName, that.filerName)
+               && Objects.equals(transactionText, that.transactionText)
+               && Objects.equals(moneyText, that.moneyText)
+               && Objects.equals(ownership, that.ownership)
+               && Objects.equals(startDate, that.startDate)
+               && Objects.equals(value, that.value)
+               && Objects.equals(filerRelation, that.filerRelation)
+               && Objects.equals(shares, that.shares)
+               && Objects.equals(filerUrl, that.filerUrl)
+               && Objects.equals(maxAge, that.maxAge);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(filerName, transactionText, moneyText, ownership, startDate,
+                value, filerRelation, shares, filerUrl, maxAge);
     }
 
     public static class LocalDateWrapper {

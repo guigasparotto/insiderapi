@@ -66,19 +66,20 @@ public class DatabaseManager {
 
             for (int i = 0; i < transactions.size(); i++) {
                 Transaction t = transactions.get(i);
-                TransactionsEntity tradeRecord = new TransactionsEntity();
-                tradeRecord.setSymbol(symbol);
-                tradeRecord.setRegion(region);
-                tradeRecord.setFilerName(t.getFilerName());
-                tradeRecord.setFilerRelation(t.getFilerRelation());
-                tradeRecord.setFilerUrl(t.getFilerUrl());
-                tradeRecord.setOwnership(t.getOwnership());
-                tradeRecord.setTransactionText(t.getTransactionText());
-                tradeRecord.setStartDate(Date.valueOf(t.getStartDate()));
-                tradeRecord.setShares(Integer.valueOf(t.getShares()));
-                tradeRecord.setValue(Double.valueOf(t.getValue()));
-                tradeRecord.setMoneyText(t.getMoneyText());
-                tradeRecord.setMaxAge(Math.toIntExact(t.getMaxAge()));
+                TransactionsEntity tradeRecord = new TransactionsEntity(
+                        symbol,
+                        region,
+                        t.getFilerName(),
+                        t.getTransactionText(),
+                        t.getMoneyText(),
+                        t.getOwnership(),
+                        Date.valueOf(t.getStartDate()),
+                        Double.valueOf(t.getValue()),
+                        t.getFilerRelation(),
+                        Integer.valueOf(t.getShares()),
+                        t.getFilerUrl(),
+                        Math.toIntExact(t.getMaxAge())
+                );
                 entityManager.persist(tradeRecord);
                 logger.info("Persisted transaction entity: " + tradeRecord);
 
@@ -117,10 +118,7 @@ public class DatabaseManager {
             SymbolsEntity symbolRecord = getSymbolRecord(symbol, region);
 
             if (symbolRecord == null) {
-                symbolRecord = new SymbolsEntity();
-                symbolRecord.setSymbol(symbol);
-                symbolRecord.setRegion(region);
-                symbolRecord.setUpdated(Date.valueOf(LocalDate.now()));
+                symbolRecord = new SymbolsEntity(symbol, region, Date.valueOf(LocalDate.now()));
             } else {
                 symbolRecord.setUpdated(Date.valueOf(LocalDate.now()));
             }
