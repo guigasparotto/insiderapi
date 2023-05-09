@@ -7,8 +7,8 @@ To achieve that, data is retrieved from the unnoficial [Yahoo Finance API](https
 ## Implementation
 
 On a high level, what the applications currently does is the following:
-* Receives the API request with symbol, region and date rage specified as parameters
-* Checks the database for the date of the lates update for that symbol and region
+* Receives the API request with symbol, region and date range specified as parameters
+* Checks the database for the date of the latest update for that symbol and region
 * If the date is older than the end date required by the initial request, it sends a request to the external API
 * If not, it retrieves and returns the date currently available
 * If fetching external data is required, it does that, then filters the data based on the date range requested before returning it
@@ -29,8 +29,9 @@ The goal, at the moment, is to avoid larger frameworks, such as Spring, to focus
 
 ## Usage
 
-In order to clone and run the application, a database must be set, and the following configuration shoulb be available in `src/main/resources/application.properties`
+In order to clone and run the application, a database must be set, and the following configuration should be available in `src/main/resources/application.properties`
 * Get your API key on: [Yahoo Finance API](https://rapidapi.com/apidojo/api/yahoo-finance1)
+* The name of the database to be created in Postgres is `insider_trade` and the port is the default 5432
 
 ```
 api-key=YOUR_KEY
