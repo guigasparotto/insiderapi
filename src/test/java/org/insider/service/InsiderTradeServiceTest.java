@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.insider.api.apiclient.ApiClient;
-import org.insider.api.serialization.TransactionWrapper;
 import org.insider.model.Transaction;
 import org.insider.repository.DatabaseManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +23,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class InsiderTradeServiceTest {
     private InsiderTradeService insiderTradeService;
+
 
     @Mock
     private ObjectMapper mockObjectMapper;
@@ -58,8 +58,9 @@ public class InsiderTradeServiceTest {
                 "",
                 "1000",
                 "www.ggd.com",
-                1
-        );
+                1,
+                "buy",
+                2.2);
 
         // TODO: Does is make sense to use a real instance of ObjectMapper?
 //        TransactionWrapper transactionWrapper =
@@ -74,12 +75,30 @@ public class InsiderTradeServiceTest {
 //        when(mockObjectMapper.readValue(anyString(), eq(TransactionWrapper.class))).thenReturn(transactionWrapper);
 //        when(mockObjectMapper.writeValueAsString(transactionWrapper))
 
-        String response = insiderTradeService.getInsiderTradingForSymbol(
-                "ZOO.L", "GB", "2019-01-01", "2019-01-01");
+        String response = String.valueOf(insiderTradeService.getInsiderTradingForSymbol(
+                "ZOO.L", "GB", "2019-01-01", "2019-01-01"));
 
         assertEquals(getJsonExpectedResult(), response);
     }
 
+    private Transaction createTransaction() {
+        Transaction transaction;
+
+        List<String> filerNames = List.of(
+                "Random Traders UK Limited",
+                "Hedge Masters LLC",
+                "Uncle Scrooge Mc Duck",
+                "Richie Rich",
+                "Tony Stark Enterprises Limited"
+        );
+
+        String transactionText = "Bought at price 1.00 per share";
+
+        return null;
+    }
+
+    // TODO: Use the createTransaction method to build the transaction and generate the response
+    // and expected result based on the same parameters
     private String getJsonYahooResponse() {
         return """
                 {
@@ -125,7 +144,9 @@ public class InsiderTradeServiceTest {
                 + "\"filerRelation\":\"\","
                 + "\"shares\":\"1000\","
                 + "\"filerUrl\":\"www.ggd.com\","
-                + "\"maxAge\":1"
+                + "\"maxAge\":1,"
+                + "\"side\":\"not specified\","
+                + "\"price\":" + null
                 + "}]";
     }
 }

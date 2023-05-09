@@ -4,17 +4,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.insider.util.ConfigReader;
 
-import javax.xml.crypto.URIReferenceException;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class YahooFinanceClient implements ApiClient {
     private static final Logger logger = LogManager.getLogger(ApiClient.class);
-    private static final String YAHOO_URL = "https://yh-finance.p.rapidapi.com/stock/v2";
+    private static final String YAHOO_URL = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2";
     public static final String INSIDERS_ENDPOINT = "/get-insider-transactions";
 
     public YahooFinanceClient() {
@@ -41,7 +39,7 @@ public class YahooFinanceClient implements ApiClient {
                 .uri(URI.create(uri))
                 .header("content-type", "application/json")
                 .header("X-RapidAPI-Key", ConfigReader.getProperty("api-key"))
-                .header("X-RapidAPI-Host", "yh-finance.p.rapidapi.com")
+                .header("X-RapidAPI-Host", "apidojo-yahoo-finance-v1.p.rapidapi.com")
                 .method("GET", HttpRequest.BodyPublishers.noBody())
                 .build();
     }

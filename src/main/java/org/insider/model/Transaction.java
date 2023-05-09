@@ -1,7 +1,5 @@
 package org.insider.model;
 
-import org.insider.repository.TransactionsEntity;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -17,6 +15,8 @@ public class Transaction {
     private final String shares;
     private final String filerUrl;
     private final Integer maxAge;
+    private final String side;
+    private final Double price;
 
     public Transaction(String filerName,
                        String transactionText,
@@ -27,7 +27,9 @@ public class Transaction {
                        String filerRelation,
                        String shares,
                        String filerUrl,
-                       Integer maxAge)
+                       Integer maxAge,
+                       String side,
+                       Double price)
     {
         this.filerName = filerName;
         this.transactionText = transactionText;
@@ -39,6 +41,8 @@ public class Transaction {
         this.shares = shares;
         this.filerUrl = filerUrl;
         this.maxAge = maxAge;
+        this.side = side;
+        this.price = price;
     }
 
     public String getFilerName() { return filerName; }
@@ -61,6 +65,10 @@ public class Transaction {
 
     public Integer getMaxAge() { return maxAge; }
 
+    public String getSide() { return side; }
+
+    public Double getPrice() { return price; }
+
     @Override
     public String toString() {
         return "Transaction{" +
@@ -68,7 +76,9 @@ public class Transaction {
                 ", transactionText='" + transactionText + '\'' +
                 ", moneyText='" + moneyText + '\'' +
                 ", ownership='" + ownership + '\'' +
-                ", startDate=" + startDate +
+                ", startDate=" + startDate + '\'' +
+                ", side=" + side + '\'' +
+                ", price=" + price + '\'' +
                 ", value='" + value + '\'' +
                 ", filerRelation='" + filerRelation + '\'' +
                 ", shares='" + shares + '\'' +
@@ -88,6 +98,8 @@ public class Transaction {
                && Objects.equals(ownership, that.ownership)
                && Objects.equals(startDate, that.startDate)
                && Objects.equals(value, that.value)
+               && Objects.equals(side, that.side)
+               && Objects.equals(price, that.price)
                && Objects.equals(filerRelation, that.filerRelation)
                && Objects.equals(shares, that.shares)
                && Objects.equals(filerUrl, that.filerUrl)
@@ -97,7 +109,7 @@ public class Transaction {
     @Override
     public int hashCode() {
         return Objects.hash(filerName, transactionText, moneyText, ownership, startDate,
-                value, filerRelation, shares, filerUrl, maxAge);
+                value, side, price, filerRelation, shares, filerUrl, maxAge);
     }
 
     public static class LocalDateWrapper {

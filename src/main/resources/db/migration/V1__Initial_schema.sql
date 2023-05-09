@@ -17,17 +17,19 @@ create table transactions
 (
     id              integer generated always as identity,
     filername       varchar(255) not null,
+    symbol          varchar(255) not null,
+    region          varchar(2)   not null,
+    startdate       date         not null,
+    side            varchar(15),
+    price           double precision,
+    shares          integer,
+    value           double precision,
     transactiontext varchar(255),
     moneytext       varchar(255),
     ownership       varchar(255),
-    startdate       date         not null,
-    value           double precision,
     filerrelation   varchar(255),
-    shares          integer,
     filerurl        text,
     maxage          integer,
-    symbol          varchar(255) not null,
-    region          varchar(2)   not null,
     constraint transactions_symbols_symbol_region_fk
         foreign key (symbol, region) references symbols (symbol, region)
 );

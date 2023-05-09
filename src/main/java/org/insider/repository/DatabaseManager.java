@@ -78,7 +78,9 @@ public class DatabaseManager {
                         t.getFilerRelation(),
                         Integer.valueOf(t.getShares()),
                         t.getFilerUrl(),
-                        Math.toIntExact(t.getMaxAge())
+                        Math.toIntExact(t.getMaxAge()),
+                        t.getSide(),
+                        t.getPrice()
                 );
                 entityManager.persist(tradeRecord);
                 logger.info("Persisted transaction entity: " + tradeRecord);
@@ -174,7 +176,9 @@ public class DatabaseManager {
                     entity.getFilerRelation(),
                     String.valueOf(entity.getShares()),
                     entity.getFilerUrl(),
-                    entity.getMaxAge()
+                    entity.getMaxAge(),
+                    entity.getSide(),
+                    entity.getPrice()
             ));
         }
 

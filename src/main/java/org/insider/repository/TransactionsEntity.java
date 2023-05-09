@@ -13,10 +13,13 @@ public class TransactionsEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(nullable = false)
     private String symbol;
+
+    @Column(nullable = false)
     private String region;
 
-    @Column(name = "filerName", nullable = false)
+    @Column(nullable = false)
     private String filerName;
 
     private String transactionText;
@@ -30,6 +33,8 @@ public class TransactionsEntity {
     private Integer shares;
     private String filerUrl;
     private Integer maxAge;
+    private String side;
+    private Double price;
 
     // Hibernate requires a default constructor with at least protected visibility
     protected TransactionsEntity() {
@@ -47,7 +52,9 @@ public class TransactionsEntity {
             String filerRelation,
             Integer shares,
             String filerUrl,
-            Integer maxAge)
+            Integer maxAge,
+            String side,
+            Double price)
     {
         this.symbol = Objects.requireNonNull(symbol);
         this.region = Objects.requireNonNull(region);
@@ -61,6 +68,8 @@ public class TransactionsEntity {
         this.shares = Objects.requireNonNull(shares);
         this.filerUrl = filerUrl;
         this.maxAge = maxAge;
+        this.side = side;
+        this.price = price;
     }
 
     public int getId() {
@@ -113,6 +122,14 @@ public class TransactionsEntity {
 
     public Integer getMaxAge() {
         return maxAge;
+    }
+
+    public String getSide() {
+        return side;
+    }
+
+    public Double getPrice() {
+        return price;
     }
 
     @Override

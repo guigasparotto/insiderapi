@@ -17,9 +17,13 @@ import org.insider.repository.SymbolsEntity;
 
 import java.net.http.HttpResponse;
 import java.sql.Date;
-import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static java.time.LocalDate.now;
+import static java.time.LocalDate.parse;
 
 public class InsiderTradeService {
     private static final Logger logger = LogManager.getLogger(InsiderTradeService.class);
@@ -43,15 +47,15 @@ public class InsiderTradeService {
                 .map(SymbolsEntity::getUpdated)
                 .orElse(null);
 
-        if (updated != null && updated.compareTo(Date.valueOf(LocalDate.now())) == 0) {
+        if (updated != null && updated.compareTo(Date.valueOf(now())) == 0) {
             queryResult = databaseManager.getTransactionsByRange(symbol, region, startDate, endDate);
         }
 
         try {
             if (queryResult == null) {
                 String uri = YahooFinanceClient.INSIDERS_ENDPOINT
-                             + "?symbol=" + symbol
-                             + "&region=" + region;
+                        + "?symbol=" + symbol
+                        + "&region=" + region;
 
                 HttpResponse<String> httpResponse;
 
@@ -75,7 +79,7 @@ public class InsiderTradeService {
                     logger.error("Failed to save transaction list to the database");
                 }
 
-                queryResult = databaseManager.getTransactionsByRange(symbol, region, startDate, endDate);
+                queryResult = parseList(transactions, startDate, endDate);
             }
 
             return objectMapper.writeValueAsString(queryResult);
@@ -83,6 +87,24 @@ public class InsiderTradeService {
             logger.error(e.getMessage());
         }
 
-        return null;
+        return "[]";
+    }
+
+    private List<Transaction> parseList(List<Transaction> transactions, String startDate, String endDate) {
+        List<Transaction> parsedResult = new ArrayList<>();
+
+        for (var t : transactions) {
+            try {
+                if ((parse(t.getStartDate()).compareTo(parse(startDate)) >= 0)
+                        && (parse(t.getStartDate()).compareTo(parse(endDate)) <= 0)) {
+                    parsedResult.add(t);
+                }
+            } catch (DateTimeParseException e) {
+                logger.error("Failed to parse record: " + t);
+                logger.error(e.getMessage());
+            }
+        }
+
+        return parsedResult;
     }
 }

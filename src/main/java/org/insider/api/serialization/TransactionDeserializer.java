@@ -8,6 +8,8 @@ import org.insider.model.Transaction;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TransactionDeserializer extends StdDeserializer<Transaction> {
     public TransactionDeserializer() {
@@ -33,8 +35,32 @@ public class TransactionDeserializer extends StdDeserializer<Transaction> {
         String filerUrl = valueOrDefault(node, "filerUrl");
         Integer maxAge = Integer.valueOf(valueOrDefault(node, "maxAge"));
 
+        String side = getSide(transactionText);
+        Double price = getPrice(transactionText);
+
         return new Transaction(filerName, transactionText, moneyText, ownership,
-                startDate, value, filerRelation, shares, filerUrl, maxAge);
+                startDate, value, filerRelation, shares, filerUrl, maxAge, side, price);
+    }
+
+    private String getSide(String transactionText) {
+        if (transactionText.startsWith("Bought")) {
+            return "buy";
+        } else if (transactionText.startsWith("Sold")) {
+            return  "sell";
+        } else {
+            return "not specified";
+        }
+    }
+
+    private Double getPrice(String transactionText) {
+        Pattern pattern = Pattern.compile("(\\d+(\\.\\d+)?)");
+        Matcher matcher = pattern.matcher(transactionText);
+
+        if (matcher.find()) {
+            return Double.parseDouble(matcher.group(1));
+        }
+
+        return null;
     }
 
     private String valueOrDefault(JsonNode node, String field) {

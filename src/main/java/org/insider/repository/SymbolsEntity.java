@@ -13,8 +13,11 @@ public class SymbolsEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(nullable = false)
     private String symbol;
+    @Column(nullable = false)
     private String region;
+    @Column(nullable = false)
     private Date updated;
 
     public int getId() {
