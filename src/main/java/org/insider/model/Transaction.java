@@ -112,6 +112,7 @@ public class Transaction {
                 value, side, price, filerRelation, shares, filerUrl, maxAge);
     }
 
+    // TODO: Created to practice something, probably not needed
     public static class LocalDateWrapper {
         private final LocalDate localDate;
         private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

@@ -3,6 +3,7 @@ package org.insider.repository.entities;
 import jakarta.persistence.*;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
@@ -18,7 +19,7 @@ public class SymbolsEntity {
     @Column(nullable = false)
     private String region;
     @Column(nullable = false)
-    private Date updated;
+    private LocalDate updated;
 
     public int getId() {
         return id;
@@ -28,7 +29,7 @@ public class SymbolsEntity {
     protected  SymbolsEntity() {
     }
 
-    public SymbolsEntity(String symbol, String region, Date updated) {
+    public SymbolsEntity(String symbol, String region, LocalDate updated) {
         this.symbol = Objects.requireNonNull(symbol);
         this.region = Objects.requireNonNull(region);
         this.updated = Objects.requireNonNull(updated);
@@ -42,11 +43,11 @@ public class SymbolsEntity {
         return region;
     }
 
-    public Date getUpdated() {
+    public LocalDate getUpdated() {
         return updated;
     }
 
-    public void setUpdated(Date updated) {
+    public void setUpdated(LocalDate updated) {
         this.updated = Objects.requireNonNull(updated);
     }
 

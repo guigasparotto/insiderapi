@@ -13,14 +13,12 @@ import org.insider.api.serialization.TransactionWrapper;
 import org.insider.api.serialization.TransactionWrapperDeserializer;
 import org.insider.model.Transaction;
 import org.insider.repository.DatabaseManager;
-import org.insider.repository.entities.SymbolsEntity;
 
 import java.net.http.HttpResponse;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static java.time.LocalDate.now;
 import static java.time.LocalDate.parse;
@@ -44,7 +42,7 @@ public class InsiderTradeServiceImpl implements InsiderTradeService {
             String symbol, String region, String startDate, String endDate)
     {
         List<Transaction> queryResult = null;
-        Date updated = null;
+        LocalDate updated = null;
 
         try {
             updated = databaseManager.getSymbolRecord(symbol, region).getUpdated();
@@ -52,7 +50,7 @@ public class InsiderTradeServiceImpl implements InsiderTradeService {
             logger.warn(e.getMessage());
         }
 
-        if ((updated != null) && (updated.compareTo(Date.valueOf(now())) == 0)) {
+        if ((updated != null) && updated.isEqual(now())) {
             queryResult = databaseManager.getTransactionsByRange(symbol, region, startDate, endDate);
         }
 

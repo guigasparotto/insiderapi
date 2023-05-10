@@ -9,9 +9,7 @@ import org.insider.repository.entities.TransactionsEntity;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -101,17 +99,17 @@ public class JpaDatabaseManager implements DatabaseManager {
 
             if (symbolRecord == null) {
                 entityManager.persist(
-                        new SymbolsEntity(symbol, region, Date.valueOf(LocalDate.now()))
+                        new SymbolsEntity(symbol, region, LocalDate.now())
                 );
             } else {
-                symbolRecord.setUpdated(Date.valueOf(LocalDate.now()));
+                symbolRecord.setUpdated(LocalDate.now());
                 entityManager.merge(symbolRecord);
             }
         }, "Committed symbol updated date to database");
     }
 
     @Override
-    public SymbolsEntity getSymbolRecord(String symbol, String region) {
+    public SymbolsEntity getSymbolRecord(String symbol, String region) throws NoResultException {
         return performQuery(entityManager -> {
             TypedQuery<SymbolsEntity> query = entityManager.createQuery(
                     "SELECT s " +
@@ -145,16 +143,13 @@ public class JpaDatabaseManager implements DatabaseManager {
         }
     }
 
-    private <T> T performQuery(Function<EntityManager, T> action) {
+    private <T> T performQuery(Function<EntityManager, T> action) throws NoResultException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
         try (entityManager) {
             return action.apply(entityManager);
         } catch (NoResultException e) {
             logger.warn(e.getMessage());
-            throw e;
-        } catch (RuntimeException e) {
-            logger.error(e.getMessage());
             throw e;
         }
     }
