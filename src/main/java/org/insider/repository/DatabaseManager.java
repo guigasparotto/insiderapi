@@ -9,6 +9,7 @@ import org.insider.util.ConfigReader;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class DatabaseManager {
     }
 
     public List<Transaction> getTransactionsByRange(String symbol, String region, String startDate, String endDate) {
+        List<Transaction> transactions = Collections.emptyList();
 
         try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
             TypedQuery<TransactionsEntity> query = entityManager.createQuery(
@@ -44,16 +46,16 @@ public class DatabaseManager {
             query.setParameter("startDate", Date.valueOf(startDate));
             query.setParameter("endDate", Date.valueOf(endDate));
 
-            return convertTransactionsEntityToTransaction(query.getResultList());
+            transactions = convertTransactionsEntityToTransaction(query.getResultList());
 
         } catch (IllegalStateException e) {
             logger.error(e.getMessage());
         }
 
-        return null;
+        return transactions;
     }
 
-    public boolean saveToDatabase(List<Transaction> transactions, String symbol, String region) {
+    public void saveTransactions(List<Transaction> transactions, String symbol, String region) {
         // Creates the session
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         EntityTransaction entityTransaction = entityManager.getTransaction();
@@ -93,16 +95,13 @@ public class DatabaseManager {
 
             entityTransaction.commit();
             logger.info("Committed transaction entity list to the database");
-
-            return true;
         } catch (IllegalStateException e) {
+            logger.error("Failed to save transaction list to the database");
             logger.error(e.getMessage());
 
             if (entityTransaction.isActive()) {
                 entityTransaction.rollback();
             }
-
-            return false;
         }
     }
 
@@ -120,15 +119,18 @@ public class DatabaseManager {
             SymbolsEntity symbolRecord = getSymbolRecord(symbol, region);
 
             if (symbolRecord == null) {
-                symbolRecord = new SymbolsEntity(symbol, region, Date.valueOf(LocalDate.now()));
+                entityManager.persist(
+                        new SymbolsEntity(symbol, region, Date.valueOf(LocalDate.now()))
+                );
             } else {
                 symbolRecord.setUpdated(Date.valueOf(LocalDate.now()));
+                entityManager.merge(symbolRecord);
             }
 
-            entityManager.persist(symbolRecord);
             entityTransaction.commit();
             logger.info("Committed symbol updated date to database");
         } catch (IllegalStateException e) {
+            logger.error("Failed to save transaction list to the database");
             logger.error(e.getMessage());
 
             if (entityTransaction.isActive()) {

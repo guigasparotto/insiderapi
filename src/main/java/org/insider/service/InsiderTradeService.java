@@ -8,7 +8,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.insider.api.apiclient.ApiClient;
-import org.insider.api.apiclient.YahooFinanceClient;
 import org.insider.api.serialization.TransactionWrapper;
 import org.insider.api.serialization.TransactionWrapperDeserializer;
 import org.insider.model.Transaction;
@@ -47,19 +46,15 @@ public class InsiderTradeService {
                 .map(SymbolsEntity::getUpdated)
                 .orElse(null);
 
-        if (updated != null && updated.compareTo(Date.valueOf(now())) == 0) {
+        if ((updated != null) && (updated.compareTo(Date.valueOf(now())) == 0)) {
             queryResult = databaseManager.getTransactionsByRange(symbol, region, startDate, endDate);
         }
 
         try {
             if (queryResult == null) {
-                String uri = YahooFinanceClient.INSIDERS_ENDPOINT
-                        + "?symbol=" + symbol
-                        + "&region=" + region;
-
                 HttpResponse<String> httpResponse;
 
-                httpResponse = apiClient.sendGetRequest(uri);
+                httpResponse = apiClient.getInsiderTransactions(symbol, region);
                 JsonNode rootNode = objectMapper.readTree(httpResponse.body());
                 JsonNode insiderTransactions =
                         rootNode.path("insiderTransactions").path("transactions");
@@ -73,11 +68,7 @@ public class InsiderTradeService {
                         TransactionWrapper.class);
 
                 List<Transaction> transactions = transactionWrapper.getTransactions();
-                boolean success = databaseManager.saveToDatabase(transactions, symbol, region);
-
-                if (!success) {
-                    logger.error("Failed to save transaction list to the database");
-                }
+                databaseManager.saveTransactions(transactions, symbol, region);
 
                 queryResult = parseList(transactions, startDate, endDate);
             }

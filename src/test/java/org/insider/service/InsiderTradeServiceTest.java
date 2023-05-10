@@ -66,7 +66,7 @@ public class InsiderTradeServiceTest {
 //        TransactionWrapper transactionWrapper =
 //                new TransactionWrapper(List.of(transaction));
 
-        when(mockApiClient.sendGetRequest(anyString())).thenReturn(mockResponse);
+        when(mockApiClient.getInsiderTransactions(anyString(), anyString())).thenReturn(mockResponse);
         when(mockResponse.body()).thenReturn(getJsonYahooResponse());
 //        when(mockObjectMapper.readTree(mockResponse.body())).thenReturn(mockRootNode);
 //        when(mockRootNode.path("insiderTransactions")).thenReturn(mockNode);

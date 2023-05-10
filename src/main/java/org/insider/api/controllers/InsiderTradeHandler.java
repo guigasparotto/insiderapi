@@ -2,36 +2,28 @@ package org.insider.api.controllers;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.insider.service.InsiderTradeService;
 
-import javax.management.QueryEval;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class InsiderTradeHandler implements HttpHandler {
     private static final Logger logger = LogManager.getLogger(InsiderTradeHandler.class);
     private final InsiderTradeService insiderTradeService;
 
-    public InsiderTradeHandler(InsiderTradeService InsiderTradeService) {
-        this.insiderTradeService = InsiderTradeService;
+    public InsiderTradeHandler(InsiderTradeService insiderTradeService) {
+        this.insiderTradeService = insiderTradeService;
     }
 
     @Override
     public void handle(HttpExchange exchange) {
         try (exchange) {
             if (!exchange.getRequestMethod().equalsIgnoreCase("GET")) {
-                String errorMessage = "Invalid request method: Only GET is allowed";
-                exchange.sendResponseHeaders(405, errorMessage.length());
-
-                OutputStream errorOutput = exchange.getResponseBody();
-                errorOutput.write(errorMessage.getBytes());
+                sendResponse(exchange, 405, "Invalid request method: Only GET is allowed");
             }
 
             String query = exchange.getRequestURI().getQuery();
@@ -55,24 +47,27 @@ public class InsiderTradeHandler implements HttpHandler {
                 // TODO: Find a better way to handle empty responses
                 jsonResponse = !jsonResponse.equals("") ? jsonResponse : "No records found";
 
-                exchange.getResponseHeaders().set("Content-Type", "application/json");
-                exchange.sendResponseHeaders(200, jsonResponse.getBytes().length);
-
-                OutputStream os = exchange.getResponseBody();
-                os.write(jsonResponse.getBytes());
-                os.close();
+                sendResponse(exchange, 200, jsonResponse);
             } catch (IllegalArgumentException e) {
                 String message = e.getMessage();
-
                 logger.error(message);
-                exchange.sendResponseHeaders(400, message.length());
 
-                OutputStream errorOutput = exchange.getResponseBody();
-                errorOutput.write(message.getBytes());
+                sendResponse(exchange, 400, message);
             }
         } catch (IOException e) {
             // TODO: Handle exceptions and send an appropriate error response
             logger.warn(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+    }
+
+    private void sendResponse(HttpExchange exchange, int statusCode, String message) throws IOException {
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.sendResponseHeaders(statusCode, message.length());
+
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(message.getBytes());
         }
     }
 
@@ -93,20 +88,20 @@ public class InsiderTradeHandler implements HttpHandler {
                     + startDate.key() + " and " + endDate.key());
         }
 
-        if (!isValidDate(startDate.value())) {
+        if (isInvalidDate(startDate.value())) {
             throw new IllegalArgumentException("Invalid date format for startDate. Received " + startDate.value());
-        } else if (!isValidDate(endDate.value())) {
+        } else if (isInvalidDate(endDate.value())) {
             throw new IllegalArgumentException("Invalid date format for endDate. Received " + endDate.value());
         }
     }
 
-    private boolean isValidDate(String dateStr) {
+    private boolean isInvalidDate(String dateStr) {
         try {
             LocalDate.parse(dateStr);
-            return true;
+            return false;
         } catch (DateTimeParseException e) {
             logger.warn(e.getMessage());
-            return false;
+            return true;
         }
     }
 

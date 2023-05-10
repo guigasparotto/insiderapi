@@ -19,7 +19,11 @@ public class YahooFinanceClient implements ApiClient {
     }
 
     @Override
-    public HttpResponse<String> sendGetRequest(String uri) {
+    public HttpResponse<String> getInsiderTransactions(String symbol, String region) {
+        String uri = YahooFinanceClient.INSIDERS_ENDPOINT
+                + "?symbol=" + symbol
+                + "&region=" + region;
+
         HttpRequest request = createGetRequest(YAHOO_URL + uri);
         HttpResponse<String> response;
 
