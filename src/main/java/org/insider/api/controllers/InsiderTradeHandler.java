@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.insider.service.InsiderTradeService;
+import org.insider.service.InsiderTradeServiceImpl;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,6 +30,7 @@ public class InsiderTradeHandler implements HttpHandler {
             String query = exchange.getRequestURI().getQuery();
             String[] queryParameters = query.split("&");
 
+            // TODO: Fix-me - Index out of bounds when the number of parameters is incorrect - Use a map?
             QueryParameter symbolParam = parseQueryParameter(queryParameters[0]);
             QueryParameter regionParam = parseQueryParameter(queryParameters[1]);
             QueryParameter startDateParam = parseQueryParameter(queryParameters[2]);
@@ -38,7 +40,7 @@ public class InsiderTradeHandler implements HttpHandler {
                 validateParameters(symbolParam, regionParam, startDateParam, endDateParam);
 
                 String jsonResponse =
-                        insiderTradeService.getInsiderTradingForSymbol(
+                        insiderTradeService.getInsiderTradesForSymbol(
                                 symbolParam.value(),
                                 regionParam.value(),
                                 startDateParam.value(),
@@ -56,7 +58,7 @@ public class InsiderTradeHandler implements HttpHandler {
             }
         } catch (IOException e) {
             // TODO: Handle exceptions and send an appropriate error response
-            logger.warn(e.getMessage());
+            logger.error(e.getMessage());
         } catch (Exception e) {
             logger.error(e.getMessage());
         }

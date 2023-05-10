@@ -1,4 +1,4 @@
-package org.insider.repository;
+package org.insider.repository.entities;
 
 import jakarta.persistence.*;
 

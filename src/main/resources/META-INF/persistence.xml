@@ -5,8 +5,8 @@
              version="3.0">
 
     <persistence-unit name="default">
-        <class>org.insider.repository.TransactionsEntity</class>
-        <class>org.insider.repository.SymbolsEntity</class>
+        <class>org.insider.repository.entities.TransactionsEntity</class>
+        <class>org.insider.repository.entities.SymbolsEntity</class>
 
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQL10Dialect" />
