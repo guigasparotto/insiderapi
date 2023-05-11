@@ -1,10 +1,12 @@
 package org.insider.model;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.Objects;
 
-public class Transaction {
+public class Transaction implements Comparable<Transaction> {
     private final String filerName;
     private final String transactionText;
     private final String moneyText;
@@ -85,6 +87,12 @@ public class Transaction {
                 ", filerUrl='" + filerUrl + '\'' +
                 ", maxAge=" + maxAge +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Transaction other) {
+        return Date.valueOf(this.getStartDate())
+                .compareTo(Date.valueOf(other.getStartDate()));
     }
 
     @Override
