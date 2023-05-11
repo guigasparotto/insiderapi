@@ -17,6 +17,11 @@
             <AppenderRef ref="Console"/>
         </Logger>
 
+        <!-- Flyway configuration -->
+        <Logger name="org.flywaydb" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
         <!-- Your application's logger configuration -->
         <Logger name="org.insider" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>

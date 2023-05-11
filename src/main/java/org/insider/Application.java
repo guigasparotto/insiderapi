@@ -26,7 +26,7 @@ public class Application {
         // Run database migration
         Flyway flyway = Flyway.configure().dataSource(
                 ConfigReader.getProperty("database.url"),
-                ConfigReader.getProperty("database.user"),
+                ConfigReader.getProperty("database.username"),
                 ConfigReader.getProperty("database.password")
         ).load();
 
