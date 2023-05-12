@@ -16,6 +16,11 @@ On a high level, what the applications currently does is the following:
 It may seem redundant to retrieve the data from external API and returning it with minor changes - the biggest benefit at the moment is to avoid external calls when the data is already available in the database. But other features will be added as the project expands.
 The goal, at the moment, is to avoid larger frameworks, such as Spring, to focus on core Java implementation.
 
+## Know Issues
+
+* At the moment, when fetching the data for a new date, all records are inserted in the database, rather than just the new ones, this causes duplication
+* Missing parameters in the request cause an exception
+
 ## Libraries and Tools
 
 * JPA and Hibernate for persistence
