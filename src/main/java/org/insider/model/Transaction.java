@@ -57,6 +57,8 @@ public class Transaction implements Comparable<Transaction> {
 
     public String getStartDate() { return startDate.getLocalDate(); }
 
+    public LocalDate getStartDateAsDate() { return LocalDate.parse(startDate.getLocalDate()); }
+
     public String getValue() { return value; }
 
     public String getFilerRelation() { return filerRelation; }

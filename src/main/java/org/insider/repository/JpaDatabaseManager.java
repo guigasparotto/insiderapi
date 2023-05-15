@@ -13,6 +13,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.stream.Collectors.toList;
+
 public class JpaDatabaseManager implements DatabaseManager {
     private static final Logger logger = LogManager.getLogger(JpaDatabaseManager.class);
     private final EntityManagerFactory entityManagerFactory;
@@ -52,10 +54,18 @@ public class JpaDatabaseManager implements DatabaseManager {
     public void saveTransactions(List<Transaction> transactions, String symbol, String region) {
         performSaveOperation(entityManager -> {
             int batchSize = 500;
-            updateSymbolRecord(symbol, region);
 
-            for (int i = 0; i < transactions.size(); i++) {
-                Transaction t = transactions.get(i);
+            // TODO: This is currently based on the last updated date, all transactions that are below
+            // this date will be filtered out, so not added to the database. But this can still cause
+            // issues, in case new transactions with same date are included into the source after we
+            // called it. Need to check the database for the very last record instead, and with this
+            // information, filter out all transactions before this one.
+            SymbolsEntity symbolRecord = getSymbolRecord(symbol, region);
+            List<Transaction> transactionsToSave = transactions.stream()
+                    .filter(t -> !t.getStartDateAsDate().isBefore(symbolRecord.getUpdated())).toList();
+
+            for (int i = 0; i < transactionsToSave.size(); i++) {
+                Transaction t = transactionsToSave.get(i);
                 TransactionsEntity tradeRecord = new TransactionsEntity(
                         symbol,
                         region,
@@ -80,6 +90,8 @@ public class JpaDatabaseManager implements DatabaseManager {
                     entityManager.clear();
                 }
             }
+
+            updateSymbolRecord(symbol, region);
         }, "Committed transaction entity list to the database");
     }
 
