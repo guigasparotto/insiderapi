@@ -15,8 +15,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -72,10 +71,10 @@ class JpaDatabaseManagerTest {
     }
 
     @Test
-    void saveTransactions_validRecords_throwsNoExceptions() {
-        int transactionCount = 50;
+    void saveTransactions_validRecordsWithNewSymbol_saveAllTransactions() {
         int persistSymbolCount = 1;
-        List<Transaction> transactions = createTransactions(transactionCount);
+        int newTransactionCount = 50;
+        List<Transaction> transactions = createTransactions(newTransactionCount, "2022-01-01");
 
         when(entityManagerFactoryMock.createEntityManager()).thenReturn(entityManagerMock);
         when(entityManagerMock.getTransaction()).thenReturn(entityTransactionMock);
@@ -84,8 +83,55 @@ class JpaDatabaseManagerTest {
 
         databaseManager.saveTransactions(transactions, "TEST", "GB");
 
-        verify(entityManagerMock, times(
-                transactionCount + persistSymbolCount)).persist(any());
+        verify(entityManagerMock, times(newTransactionCount)).persist(any(TransactionsEntity.class));
+        verify(entityManagerMock, times(persistSymbolCount)).persist(any(SymbolsEntity.class));
+    }
+
+    @Test
+    void saveTransactions_validRecordsWithExistingSymbol_saveOnlyNewTransactions() {
+        int mergeSymbolCount = 1;
+        int newTransactionCount = 10;
+
+        List<Transaction> transactions = createTransactions(40, "2022-01-01");
+        transactions.addAll(createTransactions(newTransactionCount, "2023-01-01"));
+
+        when(entityManagerFactoryMock.createEntityManager()).thenReturn(entityManagerMock);
+        when(entityManagerMock.getTransaction()).thenReturn(entityTransactionMock);
+        doNothing().when(entityManagerMock).persist(any());
+        when(entityManagerMock.createQuery(anyString(), eq(SymbolsEntity.class))).thenReturn(symbolsQueryMock);
+        when(symbolsQueryMock.getSingleResult()).thenReturn(
+                new SymbolsEntity("TEST", "GB", LocalDate.parse("2022-12-31")));
+
+        databaseManager.saveTransactions(transactions, "TEST", "GB");
+
+        verify(entityManagerMock, times(newTransactionCount)).persist(any(TransactionsEntity.class));
+        verify(entityManagerMock, times(mergeSymbolCount)).merge(any(SymbolsEntity.class));
+    }
+
+    @Test
+    void saveTransactions_throwsHibernateException_performsRollback() {
+        int newTransactionCount = 1;
+        List<Transaction> transactions = createTransactions(newTransactionCount, "2022-01-01");
+        String exceptionMessage = "Failure to insert symbol";
+        Exception expected = new PersistenceException(exceptionMessage);
+
+        when(entityManagerFactoryMock.createEntityManager()).thenReturn(entityManagerMock);
+        when(entityManagerMock.getTransaction()).thenReturn(entityTransactionMock);
+        when(entityTransactionMock.isActive()).thenReturn(true);
+
+        // doThrow is used when trying to throw exceptions from void methods
+        doThrow(expected).when(entityManagerMock).persist(any(SymbolsEntity.class));
+        when(entityManagerMock.createQuery(anyString(), eq(SymbolsEntity.class))).thenReturn(symbolsQueryMock);
+
+        // saveTransactions calls performSaveOperation, while running it, performSaveOperation is
+        // called again in the method updateSymbolRecord - where the exception occurs, it is then
+        // logged and propagated
+        // TODO: Should I just crash the system in the updateSymbolRecord instead?
+        Exception actual = assertThrows(PersistenceException.class,
+                () -> databaseManager.saveTransactions(transactions, "TEST", "GB"));
+
+        verify(entityTransactionMock, times(2)).rollback();
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -95,19 +141,12 @@ class JpaDatabaseManagerTest {
 
         List<TransactionsEntity> expectedDbTransactions =
                 createTransactionEntities(2, symbol, region, Date.valueOf("2023-02-02"));
-
         List<Transaction> expected = convertTransactionsEntityToTransaction(expectedDbTransactions);
 
-        // Creates a list of transactions with older date and add the expected transactions
-        List<TransactionsEntity> dbTransactions
-                = createTransactionEntities(10, symbol, region, Date.valueOf("2022-10-10"));
-        dbTransactions.addAll(expectedDbTransactions);
-
         when(entityManagerFactoryMock.createEntityManager()).thenReturn(entityManagerMock);
-        when(entityManagerMock.getTransaction()).thenReturn(entityTransactionMock);
         when(entityManagerMock.createQuery(anyString(), eq(TransactionsEntity.class)))
                 .thenReturn(transactionsQueryMock);
-        when(transactionsQueryMock.getResultList()).thenReturn(dbTransactions);
+        when(transactionsQueryMock.getResultList()).thenReturn(expectedDbTransactions);
 
         List<Transaction> actual = databaseManager
                 .getTransactionsByRange(symbol, region, "2023-01-01", "2023-04-30");
@@ -115,7 +154,7 @@ class JpaDatabaseManagerTest {
         assertEquals(expected, actual);
     }
 
-    private List<Transaction> createTransactions(int quantity) {
+    private List<Transaction> createTransactions(int quantity, String date) {
         List<Transaction> transactions = new ArrayList<>();
 
         for (var i = 1; i <= quantity; i++) {
@@ -124,7 +163,7 @@ class JpaDatabaseManagerTest {
                     "Bought at price " + (double) i + " per share.",
                     "Money text",
                     "D",
-                    new Transaction.LocalDateWrapper(LocalDate.of(2022, 1, 1)),
+                    new Transaction.LocalDateWrapper(LocalDate.parse(date)),
                     String.valueOf(i * 1000),
                     "",
                     "1000",

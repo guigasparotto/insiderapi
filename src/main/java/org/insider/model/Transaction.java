@@ -140,6 +140,19 @@ public class Transaction implements Comparable<Transaction> {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            LocalDateWrapper that = (LocalDateWrapper) o;
+            return Objects.equals(localDate, that.localDate);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(localDate, dateTimeFormatter);
+        }
+
+        @Override
         public String toString() {
             return localDate.format(dateTimeFormatter);
         }

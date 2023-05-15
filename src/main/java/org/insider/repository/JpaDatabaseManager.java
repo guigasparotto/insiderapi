@@ -13,8 +13,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static java.util.stream.Collectors.toList;
-
 public class JpaDatabaseManager implements DatabaseManager {
     private static final Logger logger = LogManager.getLogger(JpaDatabaseManager.class);
     private final EntityManagerFactory entityManagerFactory;
@@ -60,9 +58,24 @@ public class JpaDatabaseManager implements DatabaseManager {
             // issues, in case new transactions with same date are included into the source after we
             // called it. Need to check the database for the very last record instead, and with this
             // information, filter out all transactions before this one.
-            SymbolsEntity symbolRecord = getSymbolRecord(symbol, region);
-            List<Transaction> transactionsToSave = transactions.stream()
-                    .filter(t -> !t.getStartDateAsDate().isBefore(symbolRecord.getUpdated())).toList();
+            SymbolsEntity symbolRecord = null;
+
+            try {
+                symbolRecord = getSymbolRecord(symbol, region);
+            } catch (NoResultException ignored) {
+            }
+
+            List<Transaction> transactionsToSave;
+
+            if (symbolRecord != null) {
+                LocalDate lastUpdated = symbolRecord.getUpdated();
+                transactionsToSave = transactions.stream()
+                        .filter(t -> !t.getStartDateAsDate().isBefore(lastUpdated)).toList();
+            } else {
+                transactionsToSave = transactions;
+            }
+
+            updateSymbolRecord(symbol, region);
 
             for (int i = 0; i < transactionsToSave.size(); i++) {
                 Transaction t = transactionsToSave.get(i);
@@ -90,8 +103,6 @@ public class JpaDatabaseManager implements DatabaseManager {
                     entityManager.clear();
                 }
             }
-
-            updateSymbolRecord(symbol, region);
         }, "Committed transaction entity list to the database");
     }
 
@@ -146,12 +157,13 @@ public class JpaDatabaseManager implements DatabaseManager {
             entityTransaction.commit();
 
             logger.info(successLog);
-        } catch (IllegalStateException e) {
+        } catch (RuntimeException e) {
             if (entityTransaction.isActive()) {
                 entityTransaction.rollback();
             }
 
             logger.error(e.getMessage());
+            throw e;
         }
     }
 
