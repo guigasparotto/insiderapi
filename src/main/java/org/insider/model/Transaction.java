@@ -3,7 +3,6 @@ package org.insider.model;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.Objects;
 
 public class Transaction implements Comparable<Transaction> {
@@ -57,7 +56,7 @@ public class Transaction implements Comparable<Transaction> {
 
     public String getStartDate() { return startDate.getLocalDate(); }
 
-    public LocalDate getStartDateAsDate() { return LocalDate.parse(startDate.getLocalDate()); }
+    public LocalDate startDateAsLocalDate() { return LocalDate.parse(startDate.getLocalDate()); }
 
     public String getValue() { return value; }
 

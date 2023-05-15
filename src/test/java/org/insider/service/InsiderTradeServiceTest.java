@@ -1,11 +1,11 @@
 package org.insider.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.insider.api.apiclient.ApiClient;
 import org.insider.model.Transaction;
 import org.insider.repository.JpaDatabaseManager;
+import org.insider.repository.entities.SymbolsEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,75 +27,44 @@ public class InsiderTradeServiceTest {
 
 
     @Mock
-    private ObjectMapper mockObjectMapper;
+    private ObjectMapper objectMapperMock;
     @Mock
-    private ApiClient mockApiClient;
+    private ApiClient apiClientMock;
     @Mock
-    private HttpResponse<String> mockResponse;
+    private HttpResponse<String> responseMock;
     @Mock
-    private JsonNode mockRootNode;
+    private JsonNode rootNodeMock;
     @Mock
-    private JsonNode mockTransactionsNode;
+    private JsonNode transactionNodeMock;
     @Mock
-    private JsonNode mockNode;
+    private JsonNode nodeMock;
     @Mock
-    private JpaDatabaseManager databaseManager;
+    private JpaDatabaseManager databaseManagerMock;
 
     @BeforeEach
     public void setUp() {
         ObjectMapper objectMapper = new ObjectMapper();
-        insiderTradeService = new InsiderTradeServiceImpl(objectMapper, mockApiClient, databaseManager);
+        insiderTradeService = new InsiderTradeServiceImpl(objectMapper, apiClientMock, databaseManagerMock);
     }
 
     @Test
-    public void getInsiderTradingForSymbolTest() throws JsonProcessingException {
-        Transaction transaction = new Transaction(
-                "Guilherme D",
-                "transaction text",
-                "money text",
-                "D",
-                new Transaction.LocalDateWrapper(LocalDate.of(2019, 1, 1)),
-                "5000",
-                "",
-                "1000",
-                "www.ggd.com",
-                1,
-                "buy",
-                2.2);
+    public void getInsiderTradingForSymbolTest() {
+        String symbol = "ZOO.L";
+        String region = "GB";
+        SymbolsEntity symbolEntity = new SymbolsEntity(symbol, region, LocalDate.parse("2018-01-01"));
 
         // TODO: Does is make sense to use a real instance of ObjectMapper?
 //        TransactionWrapper transactionWrapper =
 //                new TransactionWrapper(List.of(transaction));
 
-        when(mockApiClient.getInsiderTransactions(anyString(), anyString())).thenReturn(mockResponse);
-        when(mockResponse.body()).thenReturn(getJsonYahooResponse());
-//        when(mockObjectMapper.readTree(mockResponse.body())).thenReturn(mockRootNode);
-//        when(mockRootNode.path("insiderTransactions")).thenReturn(mockNode);
-//        when(mockNode.path("transactions")).thenReturn(mockTransactionsNode);
-//        when(mockTransactionsNode.toString()).thenReturn(getJsonExpectedResult());
-//        when(mockObjectMapper.readValue(anyString(), eq(TransactionWrapper.class))).thenReturn(transactionWrapper);
-//        when(mockObjectMapper.writeValueAsString(transactionWrapper))
+        when(databaseManagerMock.getSymbolRecord(symbol, region)).thenReturn(symbolEntity);
+        when(apiClientMock.getInsiderTransactions(anyString(), anyString())).thenReturn(responseMock);
+        when(responseMock.body()).thenReturn(getJsonYahooResponse());
 
-        String response = String.valueOf(insiderTradeService.getInsiderTradesForSymbol(
-                "ZOO.L", "GB", "2019-01-01", "2019-01-01"));
+        String response = insiderTradeService.getInsiderTradesForSymbol(
+                "ZOO.L", "GB", "2019-01-01", "2019-01-01");
 
         assertEquals(getJsonExpectedResult(), response);
-    }
-
-    private Transaction createTransaction() {
-        Transaction transaction;
-
-        List<String> filerNames = List.of(
-                "Random Traders UK Limited",
-                "Hedge Masters LLC",
-                "Uncle Scrooge Mc Duck",
-                "Richie Rich",
-                "Tony Stark Enterprises Limited"
-        );
-
-        String transactionText = "Bought at price 1.00 per share";
-
-        return null;
     }
 
     // TODO: Use the createTransaction method to build the transaction and generate the response

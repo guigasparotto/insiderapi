@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.insider.model.Transaction;
 import org.insider.repository.entities.SymbolsEntity;
 import org.insider.repository.entities.TransactionsEntity;
+import org.insider.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -74,7 +75,7 @@ class JpaDatabaseManagerTest {
     void saveTransactions_validRecordsWithNewSymbol_saveAllTransactions() {
         int persistSymbolCount = 1;
         int newTransactionCount = 50;
-        List<Transaction> transactions = createTransactions(newTransactionCount, "2022-01-01");
+        List<Transaction> transactions = TestUtils.createTransactions(newTransactionCount, "2022-01-01");
 
         when(entityManagerFactoryMock.createEntityManager()).thenReturn(entityManagerMock);
         when(entityManagerMock.getTransaction()).thenReturn(entityTransactionMock);
@@ -92,8 +93,8 @@ class JpaDatabaseManagerTest {
         int mergeSymbolCount = 1;
         int newTransactionCount = 10;
 
-        List<Transaction> transactions = createTransactions(40, "2022-01-01");
-        transactions.addAll(createTransactions(newTransactionCount, "2023-01-01"));
+        List<Transaction> transactions = TestUtils.createTransactions(40, "2022-01-01");
+        transactions.addAll(TestUtils.createTransactions(newTransactionCount, "2023-01-01"));
 
         when(entityManagerFactoryMock.createEntityManager()).thenReturn(entityManagerMock);
         when(entityManagerMock.getTransaction()).thenReturn(entityTransactionMock);
@@ -111,7 +112,7 @@ class JpaDatabaseManagerTest {
     @Test
     void saveTransactions_throwsHibernateException_performsRollback() {
         int newTransactionCount = 1;
-        List<Transaction> transactions = createTransactions(newTransactionCount, "2022-01-01");
+        List<Transaction> transactions = TestUtils.createTransactions(newTransactionCount, "2022-01-01");
         String exceptionMessage = "Failure to insert symbol";
         Exception expected = new PersistenceException(exceptionMessage);
 
@@ -140,8 +141,8 @@ class JpaDatabaseManagerTest {
         String region = "GB";
 
         List<TransactionsEntity> expectedDbTransactions =
-                createTransactionEntities(2, symbol, region, Date.valueOf("2023-02-02"));
-        List<Transaction> expected = convertTransactionsEntityToTransaction(expectedDbTransactions);
+                TestUtils.createTransactionEntities(2, symbol, region, Date.valueOf("2023-02-02"));
+        List<Transaction> expected = TestUtils.convertTransactionEntitiesToTransactions(expectedDbTransactions);
 
         when(entityManagerFactoryMock.createEntityManager()).thenReturn(entityManagerMock);
         when(entityManagerMock.createQuery(anyString(), eq(TransactionsEntity.class)))
@@ -152,70 +153,5 @@ class JpaDatabaseManagerTest {
                 .getTransactionsByRange(symbol, region, "2023-01-01", "2023-04-30");
 
         assertEquals(expected, actual);
-    }
-
-    private List<Transaction> createTransactions(int quantity, String date) {
-        List<Transaction> transactions = new ArrayList<>();
-
-        for (var i = 1; i <= quantity; i++) {
-            transactions.add(new Transaction(
-                    "Guilherme D",
-                    "Bought at price " + (double) i + " per share.",
-                    "Money text",
-                    "D",
-                    new Transaction.LocalDateWrapper(LocalDate.parse(date)),
-                    String.valueOf(i * 1000),
-                    "",
-                    "1000",
-                    "www.ggd.com",
-                    1,
-                    "buy",
-                    (double) i)
-            );
-        }
-
-        return transactions;
-    }
-
-    private List<TransactionsEntity> createTransactionEntities(
-            int quantity, String symbol, String region, Date date)
-    {
-        List<TransactionsEntity> transactions = new ArrayList<>();
-
-        for (var i = 1; i <= quantity; i++) {
-            transactions.add(new TransactionsEntity(
-                    symbol, region,
-                    "Guilherme D",
-                    "Bought at price " + (double) i + " per share.",
-                    "Money text", "D", date,
-                    (double) (i * 1000), "", 1000,
-                    "www.ggd.com", 1, "buy", (double) i
-            ));
-        }
-
-        return transactions;
-    }
-
-    private List<Transaction> convertTransactionsEntityToTransaction(List<TransactionsEntity> transactionEntities) {
-        List<Transaction> transactions = new ArrayList<>();
-
-        for (var entity : transactionEntities) {
-            transactions.add(new Transaction(
-                    entity.getFilerName(),
-                    entity.getTransactionText(),
-                    entity.getMoneyText(),
-                    entity.getOwnership(),
-                    new Transaction.LocalDateWrapper(entity.getStartDate().toLocalDate()),
-                    String.valueOf(entity.getValue()),
-                    entity.getFilerRelation(),
-                    String.valueOf(entity.getShares()),
-                    entity.getFilerUrl(),
-                    entity.getMaxAge(),
-                    entity.getSide(),
-                    entity.getPrice()
-            ));
-        }
-
-        return transactions;
-    }
+    }    
 }

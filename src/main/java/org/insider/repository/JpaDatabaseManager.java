@@ -70,7 +70,7 @@ public class JpaDatabaseManager implements DatabaseManager {
             if (symbolRecord != null) {
                 LocalDate lastUpdated = symbolRecord.getUpdated();
                 transactionsToSave = transactions.stream()
-                        .filter(t -> !t.getStartDateAsDate().isBefore(lastUpdated)).toList();
+                        .filter(t -> !t.startDateAsLocalDate().isBefore(lastUpdated)).toList();
             } else {
                 transactionsToSave = transactions;
             }
