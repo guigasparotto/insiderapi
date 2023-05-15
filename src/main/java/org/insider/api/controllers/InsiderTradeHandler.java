@@ -62,10 +62,12 @@ public class InsiderTradeHandler implements HttpHandler {
 
     private void sendResponse(HttpExchange exchange, int statusCode, String message) throws IOException {
         exchange.getResponseHeaders().set("Content-Type", "application/json");
-        exchange.sendResponseHeaders(statusCode, message.length());
+        exchange.sendResponseHeaders(statusCode, message.getBytes().length);
 
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(message.getBytes());
+        } catch (Exception e) {
+            logger.error(e.getMessage());
         }
     }
 
