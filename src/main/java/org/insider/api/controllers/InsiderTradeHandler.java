@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class InsiderTradeHandler implements HttpHandler {
     private static final Logger logger = LogManager.getLogger(InsiderTradeHandler.class);
@@ -26,24 +29,18 @@ public class InsiderTradeHandler implements HttpHandler {
                 sendResponse(exchange, 405, "Invalid request method: Only GET is allowed");
             }
 
-            String query = exchange.getRequestURI().getQuery();
-            String[] queryParameters = query.split("&");
+            Map<String, String> parameterMap = parseParameters(exchange);
 
-            // TODO: Fix-me - Index out of bounds when the number of parameters is incorrect - Use a map?
-            QueryParameter symbolParam = parseQueryParameter(queryParameters[0]);
-            QueryParameter regionParam = parseQueryParameter(queryParameters[1]);
-            QueryParameter startDateParam = parseQueryParameter(queryParameters[2]);
-            QueryParameter endDateParam = parseQueryParameter(queryParameters[3]);
+            String symbol = parameterMap.get("symbol");
+            String region = parameterMap.get("region");
+            String startDate = parameterMap.get("startDate");
+            String endDate = parameterMap.get("endDate");
 
             try {
-                validateParameters(symbolParam, regionParam, startDateParam, endDateParam);
+                validateParameters(parameterMap);
 
                 String jsonResponse =
-                        insiderTradeService.getInsiderTradesForSymbol(
-                                symbolParam.value(),
-                                regionParam.value(),
-                                startDateParam.value(),
-                                endDateParam.value());
+                        insiderTradeService.getInsiderTradesForSymbol(symbol, region, startDate, endDate);
 
                 // TODO: Find a better way to handle empty responses
                 jsonResponse = !jsonResponse.equals("") ? jsonResponse : "No records found";
@@ -72,27 +69,33 @@ public class InsiderTradeHandler implements HttpHandler {
         }
     }
 
-    private void validateParameters(
-            QueryParameter symbol,
-            QueryParameter region,
-            QueryParameter startDate,
-            QueryParameter endDate) throws IllegalArgumentException
-    {
-        if (!symbol.key().equals("symbol")
-                || !region.key().equals("region")
-                || !startDate.key().equals("startDate")
-                || !endDate.key().equals("endDate"))
+    private void validateParameters(Map<String, String> parameterMap) throws IllegalArgumentException {
+        if (!parameterMap.containsKey("symbol")
+                || !parameterMap.containsKey("region")
+                || !parameterMap.containsKey("startDate")
+                || !parameterMap.containsKey("endDate"))
         {
-            throw new IllegalArgumentException("Unexpected parameter key received." +
-                    "\nExpected: symbol, region, startDate and endDate" +
-                    "\nReceived: " + symbol.key() + ", " + region.key() + ", "
-                    + startDate.key() + " and " + endDate.key());
+            Set<String> keys = parameterMap.keySet();
+
+            StringBuilder messageBuilder = new StringBuilder("""
+                    Unexpected parameter key received.
+                    Expected: symbol, region, startDate and endDate
+                    Received:\s""");
+
+            for (String key : keys) {
+                messageBuilder.append(key).append(", ");
+            }
+
+            throw new IllegalArgumentException(messageBuilder.toString());
         }
 
-        if (isInvalidDate(startDate.value())) {
-            throw new IllegalArgumentException("Invalid date format for startDate. Received " + startDate.value());
-        } else if (isInvalidDate(endDate.value())) {
-            throw new IllegalArgumentException("Invalid date format for endDate. Received " + endDate.value());
+        String startDateValue = parameterMap.get("startDate");
+        String endDateValue = parameterMap.get("endDate");
+
+        if (isInvalidDate(startDateValue)) {
+            throw new IllegalArgumentException("Invalid date format for startDate. Received " + startDateValue);
+        } else if (isInvalidDate(endDateValue)) {
+            throw new IllegalArgumentException("Invalid date format for endDate. Received " + endDateValue);
         }
     }
 
@@ -106,10 +109,17 @@ public class InsiderTradeHandler implements HttpHandler {
         }
     }
 
-    private QueryParameter parseQueryParameter(String param) {
-        String[] keyValue = param.split("=");
-        return new QueryParameter(keyValue[0], keyValue[1]);
-    }
+    private Map<String, String> parseParameters(HttpExchange exchange) {
+        Map<String, String> parameterMap = new HashMap<>();
 
-    private record QueryParameter(String key, String value) {}
+        String query = exchange.getRequestURI().getQuery();
+        String[] queryParameters = query.split("&");
+
+        for (String parameter : queryParameters) {
+            String[] keyValue = parameter.split("=");
+            parameterMap.put(keyValue[0], keyValue[1]);
+        }
+
+        return parameterMap;
+    }
 }
