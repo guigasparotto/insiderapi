@@ -23,16 +23,15 @@ public class JpaDatabaseManager implements DatabaseManager {
 
     @Override
     public List<Transaction> getTransactionsByRange(String symbol, String region, String startDate, String endDate) {
-        List<Transaction> transactions = Collections.emptyList();
-
-        try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
+        return performQuery(entityManager -> {
+            List<Transaction> transactions;
             TypedQuery<TransactionsEntity> query = entityManager.createQuery(
                     "SELECT t " +
-                    "FROM TransactionsEntity t " +
-                    "WHERE t.symbol =: symbol " +
-                    "AND t.region =: region " +
-                    "AND t.startDate >=: startDate " +
-                    "AND t.startDate <=: endDate",
+                            "FROM TransactionsEntity t " +
+                            "WHERE t.symbol =: symbol " +
+                            "AND t.region =: region " +
+                            "AND t.startDate >=: startDate " +
+                            "AND t.startDate <=: endDate",
                     TransactionsEntity.class);
             query.setParameter("symbol", symbol);
             query.setParameter("region", region);
@@ -41,11 +40,8 @@ public class JpaDatabaseManager implements DatabaseManager {
 
             transactions = convertTransactionsEntityToTransaction(query.getResultList());
 
-        } catch (IllegalStateException e) {
-            logger.error(e.getMessage());
-        }
-
-        return transactions;
+            return transactions;
+        });
     }
 
     @Override
@@ -151,7 +147,7 @@ public class JpaDatabaseManager implements DatabaseManager {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         EntityTransaction entityTransaction = entityManager.getTransaction();
 
-        try (entityManager) {
+        try {
             entityTransaction.begin();
             action.accept(entityManager);
             entityTransaction.commit();
@@ -164,17 +160,25 @@ public class JpaDatabaseManager implements DatabaseManager {
 
             logger.error(e.getMessage());
             throw e;
+        } finally {
+            if (entityManager.isOpen()) {
+                entityManager.close();
+            }
         }
     }
 
     private <T> T performQuery(Function<EntityManager, T> action) throws NoResultException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-        try (entityManager) {
+        try {
             return action.apply(entityManager);
         } catch (NoResultException e) {
             logger.warn(e.getMessage());
             throw e;
+        } finally {
+            if (entityManager.isOpen()) {
+                entityManager.close();
+            }
         }
     }
 
