@@ -18,7 +18,7 @@ The goal, at the moment, is to avoid larger frameworks, such as Spring, to focus
 
 ## Known Issues
 
-* At the moment, when fetching the data for a new date, all records are inserted in the database, rather than just the new ones, this causes duplication
+* At the moment, when fetching the data for a new date, all records are inserted in the database, rather than just the new ones, this causes duplication - *FIXED*
 * Missing parameters in the request cause an exception
 
 ## Libraries and Tools
