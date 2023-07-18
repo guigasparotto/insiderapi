@@ -103,6 +103,12 @@
             <artifactId>flyway-core</artifactId>
             <version>9.17.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.9.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

@@ -16,6 +16,7 @@ import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -57,7 +58,7 @@ public class InsiderTradeServiceTest {
 //        TransactionWrapper transactionWrapper =
 //                new TransactionWrapper(List.of(transaction));
 
-        when(databaseManagerMock.getSymbolRecord(symbol, region)).thenReturn(symbolEntity);
+        when(databaseManagerMock.getSymbolRecord(symbol, region)).thenReturn(Optional.of(symbolEntity));
         when(apiClientMock.getInsiderTransactions(anyString(), anyString())).thenReturn(responseMock);
         when(responseMock.body()).thenReturn(getJsonYahooResponse());
 

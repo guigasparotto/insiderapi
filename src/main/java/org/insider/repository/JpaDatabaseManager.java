@@ -46,6 +46,15 @@ public class JpaDatabaseManager implements DatabaseManager {
 
     @Override
     public void saveTransactions(List<Transaction> transactions, String symbol, String region) {
+        Objects.requireNonNull(transactions, "transactions cannot be null");
+        Objects.requireNonNull(symbol, "symbol cannot be null");
+        Objects.requireNonNull(region, "region cannot be null");
+
+        // TODO: Need to improve these validations to cover other possible invalid cases
+        if (transactions.isEmpty() || symbol.trim().isEmpty() || region.trim().isEmpty()) {
+            throw new IllegalArgumentException("All fields must be non-empty");
+        }
+
         performSaveOperation(entityManager -> {
             int batchSize = 500;
 
@@ -54,22 +63,12 @@ public class JpaDatabaseManager implements DatabaseManager {
             // issues, in case new transactions with same date are included into the source after we
             // called it. Need to check the database for the very last record instead, and with this
             // information, filter out all transactions before this one.
-            SymbolsEntity symbolRecord = null;
+            Optional<SymbolsEntity> symbolRecord = getSymbolRecord(symbol, region);
 
-            try {
-                symbolRecord = getSymbolRecord(symbol, region);
-            } catch (NoResultException ignored) {
-            }
-
-            List<Transaction> transactionsToSave;
-
-            if (symbolRecord != null) {
-                LocalDate lastUpdated = symbolRecord.getUpdated();
-                transactionsToSave = transactions.stream()
-                        .filter(t -> !t.startDateAsLocalDate().isBefore(lastUpdated)).toList();
-            } else {
-                transactionsToSave = transactions;
-            }
+            List<Transaction> transactionsToSave = transactions.stream()
+                    .filter(t -> symbolRecord.map(
+                            s -> !t.startDateAsLocalDate().isBefore(s.getUpdated())).orElse(true))
+                    .toList();
 
             updateSymbolRecord(symbol, region);
 
@@ -108,38 +107,34 @@ public class JpaDatabaseManager implements DatabaseManager {
     }
 
     private void updateSymbolRecord(String symbol, String region) {
-        performSaveOperation(entityManager -> {
-            SymbolsEntity symbolRecord = null;
-
-            try {
-                symbolRecord = getSymbolRecord(symbol, region);
-            } catch (NoResultException ignored) {
-            }
-
-            if (symbolRecord == null) {
-                entityManager.persist(
+        performSaveOperation(entityManager -> getSymbolRecord(symbol, region).ifPresentOrElse(
+                symbolRecord -> {
+                    symbolRecord.setUpdated(LocalDate.now());
+                    entityManager.merge(symbolRecord);
+                },
+                () -> entityManager.persist(
                         new SymbolsEntity(symbol, region, LocalDate.now())
-                );
-            } else {
-                symbolRecord.setUpdated(LocalDate.now());
-                entityManager.merge(symbolRecord);
-            }
-        }, "Committed symbol updated date to database");
+                )
+        ), "Committed symbol updated date to database");
     }
 
     @Override
-    public SymbolsEntity getSymbolRecord(String symbol, String region) throws NoResultException {
+    public Optional<SymbolsEntity> getSymbolRecord(String symbol, String region) {
         return performQuery(entityManager -> {
             TypedQuery<SymbolsEntity> query = entityManager.createQuery(
                     "SELECT s " +
-                        "FROM SymbolsEntity s " +
-                        "WHERE s.symbol =: symbol " +
-                        "AND s.region =: region",
-                SymbolsEntity.class);
+                            "FROM SymbolsEntity s " +
+                            "WHERE s.symbol =: symbol " +
+                            "AND s.region =: region",
+                    SymbolsEntity.class);
             query.setParameter("symbol", symbol);
             query.setParameter("region", region);
 
-            return query.getSingleResult();
+            try {
+                return Optional.ofNullable(query.getSingleResult());
+            } catch (NoResultException e) {
+                return Optional.empty();
+            }
         });
     }
 

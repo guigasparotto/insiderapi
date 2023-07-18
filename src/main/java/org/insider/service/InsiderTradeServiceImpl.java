@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.persistence.NoResultException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.insider.api.apiclient.ApiClient;
@@ -13,14 +12,15 @@ import org.insider.api.serialization.TransactionWrapper;
 import org.insider.api.serialization.TransactionWrapperDeserializer;
 import org.insider.model.Transaction;
 import org.insider.repository.DatabaseManager;
+import org.insider.repository.entities.SymbolsEntity;
 
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import static java.time.LocalDate.now;
 import static java.time.LocalDate.parse;
 
 public class InsiderTradeServiceImpl implements InsiderTradeService {
@@ -42,15 +42,12 @@ public class InsiderTradeServiceImpl implements InsiderTradeService {
             String symbol, String region, String startDate, String endDate)
     {
         List<Transaction> queryResult = null;
-        LocalDate updated = null;
 
-        try {
-            updated = databaseManager.getSymbolRecord(symbol, region).getUpdated();
-        } catch (NoResultException e) {
-            logger.warn(e.getMessage());
-        }
+        Optional<LocalDate> updated =
+                databaseManager.getSymbolRecord(symbol, region)
+                .map(SymbolsEntity::getUpdated);
 
-        if ((updated != null) && updated.isEqual(now())) {
+        if (updated.isPresent() && updated.get().isEqual(LocalDate.now())) {
             queryResult = databaseManager.getTransactionsByRange(symbol, region, startDate, endDate);
         }
 

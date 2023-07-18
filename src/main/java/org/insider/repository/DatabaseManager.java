@@ -4,6 +4,7 @@ import org.insider.model.Transaction;
 import org.insider.repository.entities.SymbolsEntity;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DatabaseManager {
     List<Transaction> getTransactionsByRange(String symbol, String region, String startDate, String endDate);
@@ -12,5 +13,5 @@ public interface DatabaseManager {
 
     void closeEntityManagerFactory();
 
-    SymbolsEntity getSymbolRecord(String symbol, String region);
+    Optional<SymbolsEntity> getSymbolRecord(String symbol, String region);
 }
