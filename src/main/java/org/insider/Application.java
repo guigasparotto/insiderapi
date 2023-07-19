@@ -1,11 +1,12 @@
 package org.insider;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import org.flywaydb.core.Flyway;
 import org.insider.api.controllers.InsiderTradeHandler;
+import org.insider.api.serialization.ObjectMapperWrapper;
+import org.insider.api.serialization.ObjectMapperWrapperImpl;
 import org.insider.repository.DatabaseManager;
 import org.insider.repository.JpaDatabaseManager;
 import org.insider.service.InsiderTradeService;
@@ -33,7 +34,7 @@ public class Application {
         flyway.migrate();
 
         // Create the objects to be injected into services
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapperWrapper objectMapper = new ObjectMapperWrapperImpl();
         ApiClient apiClient = new YahooFinanceClient();
 
         EntityManagerFactory entityManagerFactory =

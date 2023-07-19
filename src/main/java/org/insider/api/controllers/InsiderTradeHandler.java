@@ -1,5 +1,6 @@
 package org.insider.api.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +47,7 @@ public class InsiderTradeHandler implements HttpHandler {
                 jsonResponse = !jsonResponse.equals("") ? jsonResponse : "No records found";
 
                 sendResponse(exchange, 200, jsonResponse);
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException | JsonProcessingException e) {
                 String message = e.getMessage();
                 logger.error(message);
 

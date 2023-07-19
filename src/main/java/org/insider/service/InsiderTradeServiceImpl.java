@@ -1,15 +1,10 @@
 package org.insider.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.insider.api.apiclient.ApiClient;
-import org.insider.api.serialization.TransactionWrapper;
-import org.insider.api.serialization.TransactionWrapperDeserializer;
+import org.insider.api.serialization.ObjectMapperWrapper;
 import org.insider.model.Transaction;
 import org.insider.repository.DatabaseManager;
 import org.insider.repository.entities.SymbolsEntity;
@@ -25,22 +20,28 @@ import static java.time.LocalDate.parse;
 
 public class InsiderTradeServiceImpl implements InsiderTradeService {
     private static final Logger logger = LogManager.getLogger(InsiderTradeServiceImpl.class);
-    private final ObjectMapper objectMapper;
+    private final ObjectMapperWrapper objectMapperWrapper;
     private final ApiClient apiClient;
     private final DatabaseManager databaseManager;
 
 
-    public InsiderTradeServiceImpl(ObjectMapper objectMapper, ApiClient apiClient, DatabaseManager databaseManager) {
-        this.objectMapper = objectMapper;
-        this.objectMapper.registerModule(new JavaTimeModule());
+    public InsiderTradeServiceImpl(
+            ObjectMapperWrapper objectMapperWrapper,
+            ApiClient apiClient,
+            DatabaseManager databaseManager)
+    {
+        this.objectMapperWrapper = objectMapperWrapper;
+        this.objectMapperWrapper.setUpModules();
         this.apiClient = apiClient;
         this.databaseManager = databaseManager;
     }
 
     @Override
     public String getInsiderTradesForSymbol(
-            String symbol, String region, String startDate, String endDate)
+            String symbol, String region, String startDate, String endDate) throws JsonProcessingException
     {
+        LocalDate parsedStart = parse(startDate);
+        LocalDate parsedEnd = parse(endDate);
         List<Transaction> queryResult = null;
 
         Optional<LocalDate> updated =
@@ -51,44 +52,23 @@ public class InsiderTradeServiceImpl implements InsiderTradeService {
             queryResult = databaseManager.getTransactionsByRange(symbol, region, startDate, endDate);
         }
 
-        try {
-            if (queryResult == null) {
-                HttpResponse<String> httpResponse;
-
-                httpResponse = apiClient.getInsiderTransactions(symbol, region);
-                JsonNode rootNode = objectMapper.readTree(httpResponse.body());
-                JsonNode insiderTransactions =
-                        rootNode.path("insiderTransactions").path("transactions");
-
-                SimpleModule module = new SimpleModule();
-                module.addDeserializer(TransactionWrapper.class, new TransactionWrapperDeserializer());
-                objectMapper.registerModule(module);
-
-                TransactionWrapper transactionWrapper = objectMapper.readValue(
-                        insiderTransactions.toString(),
-                        TransactionWrapper.class);
-
-                List<Transaction> transactions = transactionWrapper.getTransactions();
-                databaseManager.saveTransactions(transactions, symbol, region);
-
-                queryResult = parseList(transactions, startDate, endDate);
-            }
-
-            return objectMapper.writeValueAsString(queryResult);
-        } catch (JsonProcessingException e) {
-            logger.error(e.getMessage());
+        if (queryResult == null) {
+            HttpResponse<String> httpResponse = apiClient.getInsiderTransactions(symbol, region);
+            List<Transaction> transactions = objectMapperWrapper.deserializeTransactions(httpResponse);
+            databaseManager.saveTransactions(transactions, symbol, region);
+            queryResult = parseList(transactions, parsedStart, parsedEnd);
         }
 
-        return "[]";
+        return objectMapperWrapper.getInstance().writeValueAsString(queryResult);
     }
 
-    private List<Transaction> parseList(List<Transaction> transactions, String startDate, String endDate) {
+    private List<Transaction> parseList(List<Transaction> transactions, LocalDate start, LocalDate end) {
         List<Transaction> parsedResult = new ArrayList<>();
 
         for (var t : transactions) {
             try {
-                if ((parse(t.getStartDate()).compareTo(parse(startDate)) >= 0)
-                        && (parse(t.getStartDate()).compareTo(parse(endDate)) <= 0)) {
+                if ((!parse(t.getStartDate()).isBefore(start))
+                        && (!parse(t.getStartDate()).isAfter(end))) {
                     parsedResult.add(t);
                 }
             } catch (DateTimeParseException e) {
