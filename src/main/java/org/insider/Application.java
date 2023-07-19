@@ -17,6 +17,7 @@ import org.insider.util.ConfigReader;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -35,7 +36,7 @@ public class Application {
 
         // Create the objects to be injected into services
         ObjectMapperWrapper objectMapper = new ObjectMapperWrapperImpl();
-        ApiClient apiClient = new YahooFinanceClient();
+        ApiClient apiClient = new YahooFinanceClient(HttpClient.newHttpClient());
 
         EntityManagerFactory entityManagerFactory =
                 Persistence.createEntityManagerFactory("default",

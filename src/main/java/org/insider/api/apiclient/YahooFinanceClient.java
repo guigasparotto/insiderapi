@@ -12,30 +12,41 @@ import java.net.http.HttpResponse;
 
 public class YahooFinanceClient implements ApiClient {
     private static final Logger logger = LogManager.getLogger(ApiClient.class);
-    private static final String YAHOO_URL = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2";
+    public static final String YAHOO_URL = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2";
     public static final String INSIDERS_ENDPOINT = "/get-insider-transactions";
+    private final HttpClient httpClient;
 
-    public YahooFinanceClient() {
+    public YahooFinanceClient(HttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
     @Override
     public HttpResponse<String> getInsiderTransactions(String symbol, String region) {
-        String uri = YahooFinanceClient.INSIDERS_ENDPOINT
-                + "?symbol=" + symbol
-                + "&region=" + region;
+        String uri = getUri(INSIDERS_ENDPOINT, "?symbol=" + symbol, "&region=" + region);
 
         HttpRequest request = createGetRequest(YAHOO_URL + uri);
         HttpResponse<String> response;
 
         try {
-            response = HttpClient.newHttpClient().
-                    send(request, HttpResponse.BodyHandlers.ofString());
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             logger.info("GET request successfully sent to " + request.uri());
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            String message = "Error occurred while sending GET request to " + request.uri();
+            logger.error(message, e);
+            throw new RuntimeException(message, e);
         }
 
         return response;
+    }
+
+    public String getUri(String endpoint, String ...params) {
+        StringBuilder uri = new StringBuilder(endpoint);
+
+        for (String param : params) {
+            uri.append(param);
+        }
+
+        return uri.toString();
     }
 
     private HttpRequest createGetRequest(String uri) {

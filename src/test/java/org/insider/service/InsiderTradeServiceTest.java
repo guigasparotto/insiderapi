@@ -1,11 +1,9 @@
 package org.insider.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.insider.api.apiclient.ApiClient;
 import org.insider.api.serialization.ObjectMapperWrapper;
-import org.insider.api.serialization.ObjectMapperWrapperImpl;
 import org.insider.model.Transaction;
 import org.insider.repository.JpaDatabaseManager;
 import org.insider.repository.entities.SymbolsEntity;
@@ -24,11 +22,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class InsiderTradeServiceTest {
     private InsiderTradeServiceImpl insiderTradeService;
+
+    // Default values
+    private final String symbol = "TEST.L";
+    private final String region = "GB";
+    String startDate = "2019-01-01";
+    String endDate = "2020-01-01";
 
     @Mock
     private ObjectMapper objectMapperMock;
@@ -40,12 +45,6 @@ public class InsiderTradeServiceTest {
     private HttpResponse<String> responseMock;
     @Mock
     private JpaDatabaseManager databaseManagerMock;
-
-	// Default values
-    private final String symbol = "TEST.L";
-    private final String region = "GB";
-    String startDate = "2019-01-01";
-    String endDate = "2020-01-01";
 
     @BeforeEach
     public void setUp() {
@@ -113,42 +112,6 @@ public class InsiderTradeServiceTest {
 
         verify(databaseManagerMock).getSymbolRecord(symbol, region);
         assertEquals("Deserialization error", e.getMessage());
-    }
-
-    // TODO: Use the createTransaction method to build the transaction and generate the response
-    // and expected result based on the same parameters
-    private String getJsonYahooResponse() {
-        return """
-                {
-                  "insiderTransactions": {
-                    "transactions": [
-                      {
-                        "filerName":"Guilherme D",
-                        "transactionText":"transaction text",
-                        "moneyText":"money text",
-                        "ownership":"D",
-                        "startDate":{
-                           "raw":1559001600,
-                           "fmt":"2019-01-01"
-                        },
-                        "value":{
-                           "raw":5000,
-                           "fmt":"5000",
-                           "longFmt":"5,000"
-                        },
-                        "filerRelation":"",
-                        "shares":{
-                           "raw":1000,
-                           "fmt":null,
-                           "longFmt":"0"
-                        },
-                        "filerUrl":"www.ggd.com",
-                        "maxAge":1
-                      }
-                    ],
-                    "maxAge": 1
-                  }
-                }""";
     }
 
     private String getJsonExpectedResult() {
